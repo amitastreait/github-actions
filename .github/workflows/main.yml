@@ -15,10 +15,12 @@ on:
         - 'force-app/**'
       
 jobs:
-  check-bats-version:
+  build:
+    if: ${{ github.actor != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     container:
       image: salesforce/salesforcedx:latest-full
+      
     steps:
     
       - uses: actions/checkout@v3
@@ -28,37 +30,60 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '16'
+          
+      # Run PMD scan
+      - name: 'Run PMD scan'
+        uses: pmd/pmd-github-action@v1
+        id: pmd
+        with:
+            sourcePath: 'force-app'
+            rulesets: 'ruleset.xml'
+            analyzeModifiedFilesOnly: false
+
+      # Check for PMD violations
+      - name: 'Check for PMD violations'
+        if: steps.pmd.outputs.violations != 0
+        run: exit 1
+      
+      - name: Upload SARIF file
+        if: steps.pmd.outputs.violations != 0
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: pmd-report.sarif
       
       - name: Decrypt server key
         run: |
             #Decrypt server key
             openssl enc -nosalt -aes-256-cbc -d -in ${{ secrets.ENCRYPTION_KEY_FILE }} -out ${{ secrets.JWT_KEY_FILE }} -base64 -K ${{ secrets.DECRYPTION_KEY }} -iv ${{ secrets.DECRYPTION_IV }}
       
-      - name: Create scratch org
+      - name: Authenticate Salesforce ORG
         run: |
           sfdx force --help
-          #Authorize Dev Hub
           sfdx force:auth:jwt:grant --clientid ${{ secrets.HUB_CONSUMER_KEY }} --jwtkeyfile  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --setdefaultdevhubusername -a HubOrg
-          #Create scratch org
-          sfdx force:org:create -s -f config/project-scratch-def.json --setdefaultusername --setalias git_action --wait 10 --durationdays 1
-          #Push source to scratch org
-          sfdx force:source:push --targetusername git_action
-      
+    
       - name: Install SFDX CLI Scanner
         run: |
           echo 'y' | sfdx plugins:install @salesforce/sfdx-scanner
           
-      - name: Run Apex Tests
-        run: |
-          #Run unit tests on scratch org
-          sfdx force:apex:test:run --targetusername git_action --wait 10 --resultformat tap --codecoverage --testlevel RunLocalTests
+      - name: 'Run Apex tests'
+        run: sfdx force:apex:test:run -c -r human -d ./tests/apex -w 20 -a HubOrg
+        
+      - name: 'Delete coverage file (temporary step)'
+        run: rm ./tests/apex/test-result-707*-codecoverage.json
+    
+      - name: 'Upload code coverage for Apex to Codecov.io'
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          flags: Apex
       
       - name: 'Lint Lightning Web Components'
         run: npm run lint:lwc
-  
-      - name: Delete Scratch Org
-        run: |
-          #Delete scratch org
-          sfdx force:org:delete --targetusername  git_action --noprompt
-            
-      
+        
+      - name: Run the Jest coverage script
+        run: npm run test:unit:coverage
+        
+      - uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          flags: LWC
