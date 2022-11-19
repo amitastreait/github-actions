@@ -45,3 +45,23 @@ The above pipeline is a simple Github Action pipeline
 
 ### Encrypt the `server.key` file using openssl
 
+#### Generate the Key & IV
+Execute the below command within the folder where your `server.key` file is located to generate the KEY & IV, once genetaed then please take a note and store it in some place from where you can easily get
+
+````cmd
+openssl enc -aes-256-cbc -k GITHUBACTIONS -P -md sha1 -nosalt
+````
+
+#### Encrypt the server.key file & generate server.key.enc file
+Execute the below command within the folder where your `server.key` file is located to generate the encrypted file.
+````cmd
+openssl enc -nosalt -aes-256-cbc -in server.key -out server.key.enc -base64 -K <KEY> -iv <IV>
+````
+> Note:  In the above command use your KEY & IV which you have generated in the previous step
+
+## Place server.key.enc file within asset folder of your repo
+
+![image](https://user-images.githubusercontent.com/14299807/202864720-862d1d13-e344-4099-b9f5-77bd0a8ff6aa.png)
+
+
+
