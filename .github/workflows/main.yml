@@ -1,15 +1,22 @@
-name: learn-github-actions
-run-name: ${{ github.actor }} is learning GitHub Actions
+name: github-actions-template
+run-name: ${{ github.actor }} is running GitHub Actions templates
 on: [push]
 jobs:
   check-bats-version:
     runs-on: ubuntu-latest
+    container:
+      image: salesforce/salesforcedx:latest-full
     steps:
       - uses: actions/checkout@v3
 
       - uses: actions/setup-node@v3
-
         with:
-          node-version: '14'
+          node-version: '16'
       - run: npm install -g bats
       - run: bats -v
+      - name: Install SFDX CLI Scanner
+        run: |
+          echo 'y' | sfdx plugins:install @salesforce/sfdx-scanner
+      - name: Setup Salesforce Auth
+        run: |
+          sfdx --version
