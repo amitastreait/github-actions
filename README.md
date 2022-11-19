@@ -1,6 +1,17 @@
-# github-actions
+# CI/CD Pipeline Analysis
+
 [![github-actions-template](https://github.com/amitastreait/github-actions/actions/workflows/main.yml/badge.svg)](https://github.com/amitastreait/github-actions/actions/workflows/main.yml)
 [![codecov](https://codecov.io/gh/amitastreait/github-actions/branch/main/graph/badge.svg?token=M4740ZWGJH)](https://codecov.io/gh/amitastreait/github-actions)
+
+## SonarCloud Analysis
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=amitastreait_github-actions&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=amitastreait_github-actions)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=amitastreait_github-actions&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=amitastreait_github-actions)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=amitastreait_github-actions&metric=coverage)](https://sonarcloud.io/summary/new_code?id=amitastreait_github-actions)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=amitastreait_github-actions&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=amitastreait_github-actions)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=amitastreait_github-actions&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=amitastreait_github-actions)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=amitastreait_github-actions&metric=bugs)](https://sonarcloud.io/summary/new_code?id=amitastreait_github-actions)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=amitastreait_github-actions&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=amitastreait_github-actions)
 
 # How To Setup CI/CD Using GitHub Actions for Salesforce
 
