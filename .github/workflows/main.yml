@@ -99,7 +99,10 @@ jobs:
           npm install @salesforce/sfdx-lwc-jest --save-dev
           
       - name: Deploy code to Salesforce Org
-        run: sfdx force:source:deploy -x delta/package/package.xml -u HubOrg # --postdestructivechanges destructiveChanges/destructiveChanges.xml
+        if: github.event.pull_request.merged == true
+        run: |
+          echo "Deploying Code to Org"
+          sfdx force:source:deploy -x delta/package/package.xml -u HubOrg # --postdestructivechanges destructiveChanges/destructiveChanges.xml
 
       - name: 'Run Apex tests'
         run: sfdx force:apex:test:run -c -r human -d ./tests/apex -w 20 -u HubOrg
