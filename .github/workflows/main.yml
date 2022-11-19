@@ -1,22 +1,64 @@
 name: github-actions-template
 run-name: ${{ github.actor }} is running GitHub Actions templates
-on: [push]
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - main
+    - release/*
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+        - master
+    paths:
+        - 'force-app/**'
+      
 jobs:
   check-bats-version:
     runs-on: ubuntu-latest
     container:
       image: salesforce/salesforcedx:latest-full
     steps:
+    
       - uses: actions/checkout@v3
-
+        with:
+          fetch-depth: 0
+          
       - uses: actions/setup-node@v3
         with:
           node-version: '16'
-      - run: npm install -g bats
-      - run: bats -v
+      
+      - name: Decrypt server key
+        run: |
+            #Decrypt server key
+            openssl enc -nosalt -aes-256-cbc -d -in ${{ secrets.ENCRYPTION_KEY_FILE }} -out ${{ secrets.JWT_KEY_FILE }} -base64 -K ${{ secrets.DECRYPTION_KEY }} -iv ${{ secrets.DECRYPTION_IV }}
+      
+      - name: Create scratch org
+        run: |
+          sfdx force --help
+          #Authorize Dev Hub
+          sfdx force:auth:jwt:grant --clientid ${{ secrets.HUB_CONSUMER_KEY }} --jwtkeyfile  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --setdefaultdevhubusername -a HubOrg
+          #Create scratch org
+          sfdx force:org:create -s -f config/project-scratch-def.json --setdefaultusername --setalias git_action --wait 10 --durationdays 1
+          #Push source to scratch org
+          sfdx force:source:push --targetusername git_action
+      
       - name: Install SFDX CLI Scanner
         run: |
           echo 'y' | sfdx plugins:install @salesforce/sfdx-scanner
-      - name: Setup Salesforce Auth
+          
+      - name: Run Apex Tests
         run: |
-          sfdx --version
+          #Run unit tests on scratch org
+          sfdx force:apex:test:run --targetusername git_action --wait 10 --resultformat tap --codecoverage --testlevel RunLocalTests
+      
+      - name: 'Lint Lightning Web Components'
+        run: npm run lint:lwc
+  
+      - name: Delete Scratch Org
+        run: |
+          #Delete scratch org
+          sfdx force:org:delete --targetusername  git_action --noprompt
+            
+      
