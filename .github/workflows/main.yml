@@ -67,7 +67,7 @@ jobs:
           
       - name: Run SFDX CLI Scanner
         run: |
-          sfdx scanner:run -f html -t "force-app" -e "eslint,retire-js,pmd,cpd" -c "Design,Best Practices,Code Style,Performance,Security" -o scan-reports
+          sfdx scanner:run -f html -t "force-app" -e "eslint,retire-js,pmd,cpd" -c "Design,Best Practices,Code Style,Performance,Security" -o ./scan-reports
           
       - name: 'Run Apex tests'
         run: sfdx force:apex:test:run -c -r human -d ./tests/apex -w 20 -u HubOrg
