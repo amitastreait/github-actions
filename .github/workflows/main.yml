@@ -66,7 +66,7 @@ jobs:
           echo 'y' | sfdx plugins:install @salesforce/sfdx-scanner
           
       - name: 'Run Apex tests'
-        run: sfdx force:apex:test:run -c -r human -d ./tests/apex -w 20 -a HubOrg
+        run: sfdx force:apex:test:run -c -r human -d ./tests/apex -w 20 -u HubOrg
         
       - name: 'Delete coverage file (temporary step)'
         run: rm ./tests/apex/test-result-707*-codecoverage.json
