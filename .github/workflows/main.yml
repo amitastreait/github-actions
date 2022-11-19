@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: salesforce/salesforcedx:latest-full
+      
     steps:
     
       - uses: actions/checkout@v3
@@ -37,11 +38,18 @@ jobs:
         with:
             sourcePath: 'force-app'
             rulesets: 'ruleset.xml'
+            analyzeModifiedFilesOnly: false
 
       # Check for PMD violations
       - name: 'Check for PMD violations'
         if: steps.pmd.outputs.violations != 0
         run: exit 1
+      
+      - name: Upload SARIF file
+        if: steps.pmd.outputs.violations != 0
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: pmd-report.sarif
       
       - name: Decrypt server key
         run: |
@@ -58,7 +66,7 @@ jobs:
           echo 'y' | sfdx plugins:install @salesforce/sfdx-scanner
           
       - name: 'Run Apex tests'
-        run: sfdx force:apex:test:run -c -r human -d ./tests/apex -w 20
+        run: sfdx force:apex:test:run -c -r human -d ./tests/apex -w 20 -a HubOrg
         
       - name: 'Delete coverage file (temporary step)'
         run: rm ./tests/apex/test-result-707*-codecoverage.json
@@ -66,7 +74,8 @@ jobs:
       - name: 'Upload code coverage for Apex to Codecov.io'
         uses: codecov/codecov-action@v3
         with:
-            flags: Apex
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          flags: Apex
       
       - name: 'Lint Lightning Web Components'
         run: npm run lint:lwc
@@ -77,6 +86,4 @@ jobs:
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-          files: ./coverage1.xml,./coverage2.xml # optional
           flags: LWC
-          name: lwc-coverahe
