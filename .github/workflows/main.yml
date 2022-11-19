@@ -18,8 +18,8 @@ jobs:
   build:
     if: ${{ github.actor != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
-    container:
-      image: salesforce/salesforcedx:latest-full
+    # container:
+    #  image: salesforce/salesforcedx:latest-full
       
     steps:
     
@@ -30,6 +30,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '16'
+          
+      - name: Install CLI
+        run: |
+          npm install
+          npm install sfdx-cli --global
           
       # Run PMD scan
       - name: 'Run PMD scan'
@@ -60,7 +65,7 @@ jobs:
       - name: Generate the Delta Since Last Commit
         run: |
           mkdir delta
-          sfdx sgd:source:delta --to "HEAD" --from "HEAD~1" --output "/delta"
+          sfdx sgd:source:delta --to "HEAD" --from "HEAD~1" --output "./delta"
           cat delta/package/package.xml
       
       - name: Decrypt server key
@@ -88,7 +93,7 @@ jobs:
           
       - name: Install the JEST Plugin
         run: |
-          npm install
+          # npm install
           npm install @salesforce/sfdx-lwc-jest --save-dev
           
       - name: Deploy code to Salesforce Org
