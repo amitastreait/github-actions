@@ -93,7 +93,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: cli-scan-report
-          path: ./reports/scan-reports.html
+          path: reports/scan-reports.html
           
       - name: Install the JEST Plugin
         run: |
