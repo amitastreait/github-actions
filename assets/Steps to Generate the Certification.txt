@@ -1,0 +1,31 @@
+Step1 - Generate a private key, and store it in a file called server.key
+
+openssl genrsa -des3 -passout pass:SomePassword -out server.pass.key 2048
+
+openssl rsa -passin pass:SomePassword -in server.pass.key -out server.key
+
+Step2 - Generate a certificate signing request using the server.key file
+
+openssl req -new -key server.key -out server.csr
+
+Step3 - Generate a self-signed digital certificate from the server.key and server.csr files
+
+openssl x509 -req -sha256 -days 365 -in server.csr -signkey server.key -out server.crt
+
+
+Step4 - Generate the Key & IV
+
+openssl enc -aes-256-cbc -k GITHUBACTIONS -P -md sha1 -nosalt
+
+key= DE3B4F6346E0CFA95CA695168A0FD8DA4D06AE808A0AFA9A4DBD2502D5DD6FE7
+iv = AC767FEDCF2105140E84B62495C3F43A
+
+Step6 - Encrypt the server.key file
+
+openssl enc -nosalt -aes-256-cbc -in server.key -out server.key.enc -base64 -K <KEY> -iv <IV>
+
+
+Decrypt the server.key.enc file
+
+openssl enc -nosalt -aes-256-cbc -d -in server.key.enc -out server.key -base64 -K <KEY> -iv <IV>
+
