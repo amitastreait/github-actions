@@ -73,10 +73,40 @@ jobs:
           mkdir reports
           sfdx scanner:run -f html -t "force-app" -e "eslint,retire-js,pmd,cpd" -c "Design,Best Practices,Code Style,Performance,Security" --outfile reports/scan-reports.html
       
+      # Run Apex PMD Scan
+      - name: 'Run PMD scan'
+        uses: pmd/pmd-github-action@v1
+        id: pmd
+        with:
+            sourcePath: 'force-app'
+            rulesets: 'ruleset.xml'
+            analyzeModifiedFilesOnly: false
+
+      # Check for PMD violations
+      - name: 'Check for PMD violations'
+        # if: steps.pmd.outputs.violations != 0
+        run: |
+          # exit 1
+          echo "test"
+      
+      - name: Upload SARIF file
+        # if: steps.pmd.outputs.violations != 0
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: pmd-report.sarif
+      
       - uses: actions/upload-artifact@v3
         with:
           name: cli-scan-report
           path: reports/scan-reports.html
+      
+      # Run Sonar Cloud Scan
+      
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       
       - name: Deploy Delta components to Salesofrce
         run: |
