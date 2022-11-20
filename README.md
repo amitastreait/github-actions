@@ -157,5 +157,116 @@ jobs:
 ![image](https://user-images.githubusercontent.com/14299807/202890065-8593f4a4-a170-4492-8cb4-f1dc633c5405.png)
 ![image](https://user-images.githubusercontent.com/14299807/202890093-409cd78e-c6db-4ac8-90ca-1553f9a44bb1.png)
 
+# Authenticate to Salesforce in Pipeline
+In the above step we have successfully installed the SFDX Pipeline the next step is authenticate to Salesforce ORG so that we can perform the validation or deployment.
 
+### Decrypt the `server.key.enc` file 
 
+- Remember we encrypted the `server.key` file at the initial steps and placed the outcome inside `assets` folder
+- Decrypt the `server.key.enc` file  to get the `server.key` at runtime to make sure that we have the private key to establish the connection with Salesforce using JWT method.
+- Add one more step within `build` job to decrypt the key. use below command
+
+````yml
+- name: Decrypt the server.key.enc file & store inside assets folder
+        run: |
+          openssl enc -nosalt -aes-256-cbc -d -in server.key.enc -out server.key -base64 -K <YOUR_KEY_VALUE> -iv <YOUR_IV_VALUE>
+````
+> Note:- Use your key & iv value that you generated at very first step
+
+![image](https://user-images.githubusercontent.com/14299807/202891826-cc38d67d-8df4-4ca6-874f-c0edc79ed5c4.png)
+
+### Authenticate to Salesforce using Pipeline
+After we have decrypted the `server.key` in the previous and have got the key file that we need to for authentication. Now, the time is to authenticate to Salesforce Username using JWT. Below is the command for authentication
+````cmd
+sfdx force:auth:jwt:grant --clientid YOUR_CLIENT_ID --jwtkeyfile assets/server.key --username SALESFORCE_USERNAME --setdefaultdevhubusername -a HubOrg
+````
+#### Note
+> Replace YOUR_CLIENT_ID with the your salesforce connected app consumer key
+> Replace SALESFORCE_USERNAME with the salesforce deployment username
+
+After making the changes, commit & push those changes to remote branch and see the outcome! You must see the success message like below
+![image](https://user-images.githubusercontent.com/14299807/202892367-688da254-9257-4f41-912d-fafcd427cf0c.png)
+
+### Validate the code base to Salesforce Org
+Congratulations 🎉, You have successfully authenticated to Salesforce Org. Now, the last step that is remaining is validating the code base to Salesforce Org. To validate/deploy the code base use below sfdx command
+````cmd
+sfdx force:source:deploy -p force-app -c -u HubOrg
+````
+#### Where
+- `-p` path to source code
+- `-c` remove this if you want to deploy. -c is used to indicate that the code will be valitated but not deployed
+- `-u` the target org username that is HubOrg as we have used HubOrg as alias in the authentication command
+
+![image](https://user-images.githubusercontent.com/14299807/202892963-509076a0-4052-444c-8b54-4c340244347c.png)
+
+> If you want to do the direct deployment then remove `-c` from the above sfdx command
+
+WoooooHoooooo 🎉 You have successfully developed a simple Github Action Pipeline that validates the code against salesforce org everytime a push is happening in the repo.
+
+Here is the complete yml file for your reference
+````yml
+name: GitHub Actions Demo
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+on: [push]
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
+      - name: List files in the repository
+        run: |
+          ls ${{ github.workspace }}
+      - run: echo "🍏 This job's status is ${{ job.status }}."
+      
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the Source code from the latest commit
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Install NPM
+        run: |
+          npm install
+      # Install the SFDX CLI using npm command
+      - name: Install the SFDX CLI
+        run: |
+          npm install sfdx-cli --global
+          sfdx force --help
+      - name: Decrypt the server.key.enc file & store inside assets folder
+        run: |
+          openssl enc -nosalt -aes-256-cbc -d -in assets/server.key.enc -out assets/server.key -base64 -K DECRYPTION_KEY -iv DECRYPTION_IV
+          
+      - name: Authenticate Salesforce ORG
+        run: |
+          sfdx force:auth:jwt:grant --clientid HUB_CONSUMER_KEY --jwtkeyfile assets/server.key --username HUB_USER_NAME --setdefaultdevhubusername -a HubOrg
+      
+      - name: Validate Source Code Against Salesforce ORG
+        run: |
+          sfdx force:source:deploy -p force-app -c -u HubOrg
+
+````
+
+# Path Filteting in Github Action
+In the current implementations anytime when the codebase is pushed to any branch then the pipeline is execting and beacuse of this we are validating the codebase even if there is not change in the code base. For example, if you change in the `yml` file then also the pipeline is executing however this should not happen.
+
+So, let's add [path filtering](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-including-paths) in Github Action
+
+To include the path filters, we need to use paths in `on` events like `push` given is the example for the same
+````yml
+on: 
+  push:
+    paths:
+      - 'force-app/**'
+````
+Commit and publish the changes, this time you will notice that no action is executed.
+
+> You can use the same concept for other folders as well and for the other events like `pull_request`
