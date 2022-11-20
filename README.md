@@ -46,12 +46,12 @@ jobs:
 The above pipeline is a simple Github Action pipeline
 
 ### Pipeline Explanation
-- name : The name that will be displayed under the Actions Tab. This could be any meaningful word. Like Prod Pipeline, QA Pipeline, etc
-- run-name: The title that will be displayed when the GitHub Action will run 
-- on : These are the events when you wanted to execute your pipeline. For Example, you only wanted to execute pipeline when the pull request is merged then the event will be `pull_request`. To more all about the event [Check Official Document](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows)
-- Jobs : This is the place where we define our all Jobs that will be executed
-- runs-on: This is the name of the runner where you wanted to run your pipeline. I have used `ubuntu-latest` but you can use from the [Available](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners) runnes in Github Actions
-- steps: These are the steps that we define witin our Jobs. For Example, installing the SFDX, Authenticating with Salesforce, Running Apex Test, Deployment, & etc
+- `name` : The name that will be displayed under the Actions Tab. This could be any meaningful word. Like Prod Pipeline, QA Pipeline, etc
+- `run-name`: The title that will be displayed when the GitHub Action will run 
+- `on` : These are the events when you wanted to execute your pipeline. For Example, you only wanted to execute pipeline when the pull request is merged then the event will be `pull_request`. To more all about the event [Check Official Document](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows)
+- `Jobs` : This is the place where we define our all Jobs that will be executed
+- `runs-on`: This is the name of the runner where you wanted to run your pipeline. I have used `ubuntu-latest` but you can use from the [Available](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners) runnes in Github Actions
+- `steps`: These are the steps that we define witin our Jobs. For Example, installing the SFDX, Authenticating with Salesforce, Running Apex Test, Deployment, & etc
 
 # Prepare your Salesforce Environment for Github Action CI/CD
 
@@ -82,10 +82,80 @@ openssl enc -nosalt -aes-256-cbc -in server.key -out server.key.enc -base64 -K <
 
 ![image](https://user-images.githubusercontent.com/14299807/202864720-862d1d13-e344-4099-b9f5-77bd0a8ff6aa.png)
 
-# Test #1
+## Test #1
 Now as we are done with the first step, let's push this code to our github and see the GitHub Action running
 
 ![image](https://user-images.githubusercontent.com/14299807/202889462-00a89eb4-6a89-4d34-87e3-d18302c3eed8.png)
 ![image](https://user-images.githubusercontent.com/14299807/202889492-1a85ded3-bb77-4d2d-ac5f-9c1ddf8c329a.png)
 ![image](https://user-images.githubusercontent.com/14299807/202889498-2159e569-17cc-48b0-b82f-4e8c423eb24c.png)
+
+# Install SFDX CLI in pipeline
+Now, as we are done with the simple pipeline and we have also done with the steps for authentication with Salesforce! Let's make modification in our pipeline to add a job `build`, here we will perform the steps related to Salesforce Deployment. The first step in this pipeline would be installing the SFDX and testing if the SFDX has been installed or not
+
+In your pipeline yml file add the below code
+````yml
+build:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the Source code from the latest commit
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Install NPM
+        run: |
+          npm install
+      # Install the SFDX CLI using npm command
+      - name: Install the SFDX CLI
+        run: |
+          npm install sfdx-cli --global
+          sfdx force --help
+````
+If you are making the changes into the Github directly, then commit the changes and see the magic. If you are making the changes in local repo then you need to commit and push the changes to remote branch.
+
+> Note: The indentation is very important in the pipeline. So you need to be very careful. You can use [Online YML Validator](https://codebeautify.org/yaml-validator) to validate your YML file
+
+Here is the `yml` file after making the above changes
+````yml
+name: GitHub Actions Demo
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+on: [push]
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
+      - name: List files in the repository
+        run: |
+          ls ${{ github.workspace }}
+      - run: echo "🍏 This job's status is ${{ job.status }}."
+      
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the Source code from the latest commit
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Install NPM
+        run: |
+          npm install
+      # Install the SFDX CLI using npm command
+      - name: Install the SFDX CLI
+        run: |
+          npm install sfdx-cli --global
+          sfdx force --help
+````
+![image](https://user-images.githubusercontent.com/14299807/202890065-8593f4a4-a170-4492-8cb4-f1dc633c5405.png)
+![image](https://user-images.githubusercontent.com/14299807/202890093-409cd78e-c6db-4ac8-90ca-1553f9a44bb1.png)
+
+
 
