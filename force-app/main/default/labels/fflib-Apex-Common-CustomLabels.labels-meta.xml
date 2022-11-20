@@ -8,20 +8,6 @@
         <value>Cross-object fields not allowed and field &quot;{0}&quot; is a cross-object field.</value>
     </labels>
     <labels>
-        <fullName>fflib_QueryFactory_fieldset_wrong_sobject_error</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Error when selecting a field set for a different sobject type.</shortDescription>
-        <value>Field set &quot;{0}&quot; is not for SObject type &quot;{1}&quot;</value>
-    </labels>
-    <labels>
-        <fullName>fflib_QueryFactory_recursive_subquery_error</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Presented when attempting to nest subqueries.</shortDescription>
-        <value>Invalid call to subselectQuery.  You may not add a subselect query to a subselect query.</value>
-    </labels>
-    <labels>
         <fullName>fflib_QueryFactory_subquery_invalid_relationship</fullName>
         <language>en_US</language>
         <protected>false</protected>
