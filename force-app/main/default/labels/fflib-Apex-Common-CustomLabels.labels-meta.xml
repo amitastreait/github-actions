@@ -29,14 +29,6 @@
         <value>Invalid call to subselectQuery.  Invalid relationship for table.</value>
     </labels>
     <labels>
-        <fullName>fflib_security_error_field_not_insertable</fullName>
-        <categories>security,error</categories>
-        <language>en_US</language>
-        <protected>true</protected>
-        <shortDescription>fflib_security_error_field_not_insertable</shortDescription>
-        <value>You do not have permission to insert field {1} on {0}</value>
-    </labels>
-    <labels>
         <fullName>fflib_security_error_field_not_readable</fullName>
         <categories>security,error</categories>
         <language>en_US</language>
