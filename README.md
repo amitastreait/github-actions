@@ -419,3 +419,167 @@ Because we have setup a production pipeline, to test the pipeline do follow the 
 ![image](https://user-images.githubusercontent.com/14299807/202898828-41a72d5a-1342-4132-a61b-e8d9d743b110.png)
 ![image](https://user-images.githubusercontent.com/14299807/202898894-c3bc9c77-e4b1-4827-95ab-bdfbaddf71c4.png)
  
+If everything looks ok then you will see the success build like below
+![image](https://user-images.githubusercontent.com/14299807/202898976-12478514-8607-4747-9308-1a66b5964e39.png)
+
+# Work with Delta Deployment
+Delta deployment is very important these days to achieve the selective deployment because in our current approach we are deploying everythin that is inside `force-app` no matter if we have changes in a single apex class it will deploy all the apex classes.
+
+Because we are using sfdx deployment, we will be using a SFDX Plugin to generate the data at the run time. The plugin [sfdx-git-delta](https://github.com/scolladon/sfdx-git-delta) is very helpful. This plugin is available for free and does not requires any licencing. 
+
+Delta deployment will be helpful when we are deploying to higher environment using Pull Request.
+
+### Create .sgdignore file
+To make the Delta deployment using sfdx plugin, it is important to create the .sgdignore file and add the below content. We are creating this file becuase if you change .yml file in the repo then plugin will consider this file as `workflow` and a new entry will be added in `package.xml` which will fail the deplpyment.
+> The file must be at the topmost directory at the same level of `force-app` folder
+````yml
+# Github Actions
+.github/
+.github/workflow
+````
+
+### Install the sfdx-git-delta plugin in Pipeline
+To install the plugin, add the new step before decryping the `sever.key.inc` file after the SFDX Intallation step
+````yml
+- name: Install the sfdx-git-delta plugin
+  run: |
+    echo 'y' | sfdx plugins:install sfdx-git-delta
+````
+![image](https://user-images.githubusercontent.com/14299807/202899508-b119c08c-554d-4bee-b2b4-663ec4e50c7f.png)
+
+### Generate package.xml for changed components only
+When we talk about the delta deployment that means we need to generate the `package.xml` at run time and the package.xml will contain only the component that has been changed by the developer.
+
+Add the below step after the authentication with Salesforce
+````yml
+- name: Generate the package.xml for delta files
+  run: |
+    mkdir delta
+    sfdx sgd:source:delta --to "HEAD" --from "HEAD~1" --output "./delta" --ignore-whitespace -d -i .sgdignore
+    echo "--- package.xml generated with added and modified metadata ---"
+    cat delta/package/package.xml
+````
+
+### Deploy delta components to Salesforce
+After you have generated the `package.xml` with the changed components only. Add the step to deploy the delta components to salesforce
+````yml
+- name: Deploy Delta components to Salesofrce
+  run: |
+    sfdx force:source:deploy -x delta/package/package.xml -c -l RunLocalTests -u HubOrg
+````
+Commit & publish the yml file.
+> Note- Delete the other deployment step
+
+### Test the delta deployment
+Because we are done with the changes that we need in the pipeline .yml file. Let's make some changes into the code base while we are on the `developer` branch.
+Create a pull request and merge the changes.
+
+Click on the build Job to see the outcome of your Job. You will see the outcome like below
+![image](https://user-images.githubusercontent.com/14299807/202900879-11271284-0808-41f3-b2d2-271285f67b30.png)
+
+The deployment is failing due to some code coverage. If everything is ok your pipeline will be success
+![image](https://user-images.githubusercontent.com/14299807/202900932-8bd9106e-1179-4ec5-8827-ae5d284479d4.png)
+
+### Final Code for Production Pipeline
+````yml
+name: Production Pipeline
+run-name: ${{ github.actor }} is running pipeline on ${{ github.repository }}
+on: 
+  pull_request:
+    types: [closed]
+    branches:
+      - master
+      - main
+    paths:
+      - 'force-app/**'
+      
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
+      - name: List files in the repository
+        run: |
+          ls ${{ github.workspace }}
+      - run: echo "🍏 This job's status is ${{ job.status }}."
+      
+  build:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      # Checkout the Source code from the latest commit
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Install NPM
+        run: |
+          npm install
+      # Install the SFDX CLI using npm command
+      - name: Install the SFDX CLI
+        run: |
+          npm install sfdx-cli --global
+          sfdx force --help
+          
+      - name: Install the sfdx-git-delta plugin
+        run: |
+          echo 'y' | sfdx plugins:install sfdx-git-delta
+          
+      - name: Decrypt the server.key.enc file & store inside assets folder
+        run: |
+          openssl enc -nosalt -aes-256-cbc -d -in ${{ secrets.ENCRYPTION_KEY_FILE }} -out ${{ secrets.JWT_KEY_FILE }} -base64 -K ${{ secrets.DECRYPTION_KEY }} -iv ${{ secrets.DECRYPTION_IV }}
+          
+      - name: Authenticate Salesforce ORG
+        run: |
+          sfdx force:auth:jwt:grant --clientid ${{ secrets.HUB_CONSUMER_KEY }} --jwtkeyfile  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --setdefaultdevhubusername -a HubOrg --instanceurl ${{ secrets.HUB_LOGIN_URL }} 
+      
+      - name: Generate the package.xml for delta files
+        run: |
+          mkdir delta
+          sfdx sgd:source:delta --to "HEAD" --from "HEAD~1" --output "./delta" --ignore-whitespace -d -i .sgdignore
+          echo "--- package.xml generated with added and modified metadata ---"
+          cat delta/package/package.xml
+      
+      - name: Deploy Delta components to Salesofrce
+        run: |
+          sfdx force:source:deploy -x delta/package/package.xml -c -l RunLocalTests -u HubOrg
+````
+
+# Integrate the Static Code Analysis Tool
+It is very important that we keep our code clean that follows all the best practices to get rid of technical dept in your code, making sure the code is not vulnerable, and other security issues are being taken care at the early stage of the development
+
+### Install the SFDX CLI Scanner
+Because Salesforce has it's own plugin to perform the static code analysis. We will be using [SFDX CLI Scanner](https://forcedotcom.github.io/sfdx-scanner/) plugin to analysis the code vulnerable.
+
+Add the step to install the scanner in your pipeline before deployment step
+````yml
+- name: Install the SFDX CLI Scanner
+  run: |
+    echo 'y' | sfdx plugins:install @salesforce/sfdx-scanner
+````
+
+### Run the Code Analysis tool in repo
+The above step will install the scanner and now, we need to run the Scanner to scan all our code and generate the report. Add a nee Step to scan the code
+````yml
+- name: Run SFDX CLI Scanner
+  run: |
+    sfdx scanner:run -f html -t "force-app" -e "eslint,retire-js,pmd,cpd" -c "Design,Best Practices,Code Style,Performance,Security" --outfile ./reports/scan-reports.html
+````
+
+### Upload the Scan report as Artifacts
+It is very important to store the scan result as artifacts so that developers can download and refer the reports to make the changes into the code that may cause the technical debt
+````yml
+- uses: actions/upload-artifact@v3
+  with:
+    name: cli-scan-report
+    path: reports/scan-reports.html
+````
+![image](https://user-images.githubusercontent.com/14299807/202902177-77f65a7f-0fc8-4ea7-b1f0-4a8be537ac26.png)
+
