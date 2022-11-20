@@ -24,6 +24,7 @@ jobs:
       
   build:
     runs-on: ubuntu-latest
+    environment: developer
     steps:
       # Checkout the Source code from the latest commit
       - uses: actions/checkout@v3
@@ -44,7 +45,7 @@ jobs:
           
       - name: Authenticate Salesforce ORG
         run: |
-          sfdx force:auth:jwt:grant --clientid ${{ secrets.HUB_CONSUMER_KEY }} --jwtkeyfile  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --setdefaultdevhubusername -a HubOrg
+          sfdx force:auth:jwt:grant --clientid ${{ secrets.HUB_CONSUMER_KEY }} --jwtkeyfile  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --setdefaultdevhubusername -a HubOrg --instanceurl ${{ secrets.HUB_LOGIN_URL }} 
       
       - name: Validate Source Code Against Salesforce ORG
         run: |
