@@ -13,6 +13,13 @@
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=amitastreait_github-actions&metric=bugs)](https://sonarcloud.io/summary/new_code?id=amitastreait_github-actions)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=amitastreait_github-actions&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=amitastreait_github-actions)
 
+- [What are Github Actions](https://github.com/amitastreait/github-actions/#what-are-github-actions)
+- [How To Setup CI/CD Using GitHub Actions for Salesforce](https://github.com/amitastreait/github-actions/#how-to-setup-cicd-using-github-actions-for-salesforce)
+
+# What are Github Actions
+Github Actions is a Continuous Integration & Deployment platform provided by Github that can be used to deploy your code from one environment to another environment.
+You can create workflows and jobs to trigger the pipeline and deployment.
+
 # How To Setup CI/CD Using GitHub Actions for Salesforce
 
 - Create `.github` folder withing the parent directory of your Git Repo
