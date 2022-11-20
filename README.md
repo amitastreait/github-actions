@@ -270,3 +270,99 @@ on:
 Commit and publish the changes, this time you will notice that no action is executed.
 
 > You can use the same concept for other folders as well and for the other events like `pull_request`
+
+# Add Environments in Github Actions
+Adding the environment in Github Action is very important because whenever you are making the changes into the codebase and pushing the changes the validation runs against the org. What if you wanted to deploy the code to different environment like Integration, QA, Staging, SIT, & etc and this will be obivious use case. You must be deploying the code to different environment.
+
+### Steps to create environment in Github Actions
+1. Open the Repo where you wanted to create environment
+2. Click on **Setting** tab to open the settings
+3. Locate **Environment** item from the left side
+4. Click on **New Environment** to create a New Environment
+5. Give a name & click on **Configure Environment**
+
+![image](https://user-images.githubusercontent.com/14299807/202894602-689f2a2d-9e35-408b-8c68-12c8eb59902e.png)
+
+![image](https://user-images.githubusercontent.com/14299807/202894631-7475c2bb-a357-4594-a4a9-a19a94921995.png)
+
+![image](https://user-images.githubusercontent.com/14299807/202894723-0fe21564-1c95-4e1e-b48b-77b0822e4773.png)
+
+> Congratilation :tada: you have created the environment. If you wanted to create more environment then follow the same steps
+
+# Configures Secrets in Github Action Environments
+Because we are using the values directoly in the `yml` there are chances that some intrudor can access the information and get the unauthorised access to our Salesforce environment it is always best practice to create the secrets and store all the sensitive information in secrets. For Example, username, key file, client id, login url & etc.
+
+ Also as the requirement is to deploy the code to various environment and the credentials and URL will be different for each Environments.
+ 
+ 1. While you are on the environment page 
+ 2. Click on the `add secret` button under `Environment secrets` section
+ 3. and add the following secrets for your environment
+    - **DECRYPTION_KEY** the value of Key file to decrypt the server.key.inc file
+    - **DECRYPTION_IV** the value of IV file to decrypt the server.key.inc file
+    - **ENCRYPTION_KEY_FILE** the location to encrypted file that is `assets/server.key.inc`
+    - **JWT_KEY_FILE** - the location to place the decrypted key file and the value should be `asset/server.key`
+    - **HUB_CONSUMER_KEY** - the salesforce connected application id
+    - **HUB_USER_NAME** - the salesforce username that needs to perform the validation/deployment. ( This should be the deployment username )
+    - **HUB_LOGIN_URL** - the salesforce login url depending upon either it is salesforce sandbox or production
+  4. If you have multiple environment, then please add the secrets across all your environments
+    
+> You can have the naming as per your need. If you use different name then make sure to refer those names in your pipeline
+> If you have multiple environment, then make sure that the variable names are same across all environments
+
+![image](https://user-images.githubusercontent.com/14299807/202895575-1bedf281-6adb-453b-a477-6d038a6cfbb1.png)
+ 
+# Access Environment Secrets in your Pipeline
+
+### Add Environment in build
+Because we have setup the environment alsong with the secrets, fist we need to tell our pipeline which environment the salesforce validation should be performed. The first step to modify our job that is `build` and add environment keyword like below
+![image](https://user-images.githubusercontent.com/14299807/202895645-ce58f317-add8-4369-88d3-8212e2201273.png)
+
+### Refer secrets in the steps
+- To access the secrets within Github Action pipeline we need to first use $ followed by double opening flower brackets( {{ ) & double closing flower brackets( }} ). Example ` ${{ }} `.
+- Withing the flower brackets use `secrets` keyword followed by the period `.` statement followed by the name of the secrets. For Example - `${{ secrets.DECRYPTION_KEY }}`
+- Replace all the hardcoding values with the secrets that you have just created.
+- Below is the modified code for the `build` job
+
+````yml
+build:
+    runs-on: ubuntu-latest
+    environment: developer
+    steps:
+      # Checkout the Source code from the latest commit
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Install NPM
+        run: |
+          npm install
+      # Install the SFDX CLI using npm command
+      - name: Install the SFDX CLI
+        run: |
+          npm install sfdx-cli --global
+          sfdx force --help
+      - name: Decrypt the server.key.enc file & store inside assets folder
+        run: |
+          openssl enc -nosalt -aes-256-cbc -d -in ${{ secrets.ENCRYPTION_KEY_FILE }} -out ${{ secrets.JWT_KEY_FILE }} -base64 -K ${{ secrets.DECRYPTION_KEY }} -iv ${{ secrets.DECRYPTION_IV }}
+          
+      - name: Authenticate Salesforce ORG
+        run: |
+          sfdx force:auth:jwt:grant --clientid ${{ secrets.HUB_CONSUMER_KEY }} --jwtkeyfile  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --setdefaultdevhubusername -a HubOrg --instanceurl ${{ secrets.HUB_LOGIN_URL }} 
+      
+      - name: Validate Source Code Against Salesforce ORG
+        run: |
+          sfdx force:source:deploy -p force-app -c -u HubOrg
+````
+
+Commit and publish the changes. You will see that no Action is running because no changes has been made to code base.
+
+### Test Environment based validation/deployment
+To test the deployment or validation under the environment in my case `developer` make any changes in code base and publish the changes. You will clearly see that it is deploying on mentioned environment.
+![image](https://user-images.githubusercontent.com/14299807/202896010-821d3f82-7511-4891-b630-5d3d664b4415.png)
+
+If all the values are correct then you see the success job like below
+
+![image](https://user-images.githubusercontent.com/14299807/202896148-72c80c47-2c7b-43fe-8045-21ed4bbcf432.png)
+
+
+ 
