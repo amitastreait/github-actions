@@ -364,5 +364,58 @@ If all the values are correct then you see the success job like below
 
 ![image](https://user-images.githubusercontent.com/14299807/202896148-72c80c47-2c7b-43fe-8045-21ed4bbcf432.png)
 
+# Work with Pull Request in Github Action
+It is ok to run the pipeline everytime when there is a change in codebase pushed to remote branch however when it comes to higher environment like qa, staging, integration or production then the pipeline should only execute when there is a pull_request raised and closed successfully.
 
+### Modify the developer pipeline
+To take the most out of Pull Request concept using Pipeline we need to make the following changes in our existing pipeline. 
+- Add `branches` filter in the push event
+- Below is the code for your reference
+
+````yml
+on: 
+  push:
+    branches:
+      - feature/*
+    paths:
+      - 'force-app/**'
+````
+
+### Create a new pipeline
+We have successfully created and tested the pipeline for developer environment and branch. Now let's create another pipeline that will execute when the pull request is raised to master branch and it is merged. 
+
+- Create a new pipeline inside `.github/workflow` folder. You can give it any name, I will use `production.yml`
+- Copy and paste the same code as `github-actions.yml`
+- Change the environment to `production` under `build` job. Note:- This will require to create a new environment with name `production` and secrets setup
+- Change the name to `Production Pipeline`
+- change the `run-name` to `${{ github.actor }} is running pipeline on ${{ github.repository }}`
+- for `on` use below code
+
+````yml
+on: 
+  pull_request:
+    types: [closed]
+    branches:
+      - master
+      - main
+    paths:
+      - 'force-app/**'
+````
+#### Where
+- **branches**: This pipeline should only execute when there is a PR raised to `master` branch
+- **types**: Pipeline will execute only when the PR is closed. You can see all values from [Official Document](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request)
+- **paths**: only execute the pipeline when there is change in `force-app` folder that is codebase
+
+### Create a New Branch
+Because we have setup a production pipeline, to test the pipeline do follow the below steps
+- Create a branch out of `maste or main` branch and name it developer
+- Make change in codebase in `developer` branch
+- Create a Pull request from `developer` branch to `master` or `main` branch
+- Merge the PR
+- Notice that the Pipeline on Master branch has been executed
+
+![image](https://user-images.githubusercontent.com/14299807/202898775-ab2a2c50-b6c5-44ad-9b79-297d23bfaa4d.png)
+![image](https://user-images.githubusercontent.com/14299807/202898807-c8e27141-663d-479d-8371-082805ff4869.png)
+![image](https://user-images.githubusercontent.com/14299807/202898828-41a72d5a-1342-4132-a61b-e8d9d743b110.png)
+![image](https://user-images.githubusercontent.com/14299807/202898894-c3bc9c77-e4b1-4827-95ab-bdfbaddf71c4.png)
  
