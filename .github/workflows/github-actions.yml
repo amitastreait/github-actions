@@ -1,4 +1,4 @@
-name: Pipeline
+name: Github Actions
 run-name: ${{ github.actor }} is running pipeline on ${{ github.repository }}
 on: 
   workflow_dispatch:
