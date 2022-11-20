@@ -1,10 +1,12 @@
-name: Github Actions
+name: Developer Pipeline
 run-name: ${{ github.actor }} is running pipeline on ${{ github.repository }}
 on: 
   workflow_dispatch:
   push:
     branches:
       - developer
+    paths:
+      - 'force-app/**'
       
 jobs:
   Explore-GitHub-Actions:
@@ -35,6 +37,7 @@ jobs:
       - name: Install NPM
         run: |
           npm install
+          
       # Install the SFDX CLI using npm command
       - name: Install the SFDX CLI
         run: |
@@ -66,7 +69,8 @@ jobs:
       
       - name: Run SFDX CLI Scanner
         run: |
-          sfdx scanner:run -f html -t "force-app" -e "eslint,retire-js,pmd,cpd" -c "Design,Best Practices,Code Style,Performance,Security" --outfile ./reports/scan-reports.html
+          mkdir reports
+          sfdx scanner:run -f html -t "force-app" -e "eslint,retire-js,pmd,cpd" -c "Design,Best Practices,Code Style,Performance,Security" --outfile reports/scan-reports.html
       
       - uses: actions/upload-artifact@v3
         with:
@@ -75,5 +79,5 @@ jobs:
       
       - name: Deploy Delta components to Salesofrce
         run: |
-          # sfdx force:source:deploy -x delta/package/package.xml -c -l RunLocalTests -u HubOrg
+          sfdx force:source:deploy -x delta/package/package.xml -c -l RunLocalTests -u HubOrg
   
