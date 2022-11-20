@@ -67,6 +67,7 @@
         <shortDescription>fflib_security_error_object_not_insertable</shortDescription>
         <value>You do not have permission to insert {0}</value>
     </labels>
+    
     <labels>
         <fullName>fflib_security_error_object_not_readable</fullName>
         <categories>security,error</categories>
@@ -75,6 +76,7 @@
         <shortDescription>fflib_security_error_object_not_readable</shortDescription>
         <value>You do not have permission to read {0}</value>
     </labels>
+    
     <labels>
         <fullName>fflib_security_error_object_not_updateable</fullName>
         <categories>security,error</categories>
