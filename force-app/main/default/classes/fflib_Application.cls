@@ -65,6 +65,7 @@ public virtual class fflib_Application
 			if(m_mockUow!=null)
 				return m_mockUow;
 			return new fflib_SObjectUnitOfWork(m_objectTypes);
+			// This is simple comment
 		}
 
 		/**
