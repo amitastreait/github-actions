@@ -583,3 +583,20 @@ It is very important to store the scan result as artifacts so that developers ca
 ````
 ![image](https://user-images.githubusercontent.com/14299807/202902177-77f65a7f-0fc8-4ea7-b1f0-4a8be537ac26.png)
 
+# Work with dependent Jobs
+Sometime you have a requirement that one job need to wait until the other job has been completed. For Example, the job `build` need to wait `Explore-GitHub-Actions` job to be executed then only `build` job will execute.
+
+Use `needs` tag in the dependent job and add all the controling job comma seperated withing `[]`.
+````yml
+build:
+  runs-on: ubuntu-latest
+  needs: [Explore-GitHub-Actions]
+  environment: developer
+````
+
+![image](https://user-images.githubusercontent.com/14299807/202902848-3396ab6c-45f6-414d-9c35-54c48e6e7b95.png)
+
+Make changes in codebase, commit and publish the changes to execute the job.
+
+![image](https://user-images.githubusercontent.com/14299807/202902934-6fe41eca-b0e2-4288-852b-51624dd1c05e.png)
+
