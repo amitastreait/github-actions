@@ -1,6 +1,7 @@
 name: Pipeline
 run-name: ${{ github.actor }} is running pipeline on ${{ github.repository }}
 on: 
+  workflow_dispatch:
   push:
     branches:
       - developer
