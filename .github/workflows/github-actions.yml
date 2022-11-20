@@ -5,8 +5,8 @@ on:
   push:
     branches:
       - developer
-    paths:
-      - 'force-app/**'
+    # paths:
+    #  - 'force-app/**'
       
 jobs:
   Explore-GitHub-Actions:
@@ -27,6 +27,7 @@ jobs:
       
   build:
     runs-on: ubuntu-latest
+    needs: [Explore-GitHub-Actions]
     environment: developer
     steps:
       # Checkout the Source code from the latest commit
