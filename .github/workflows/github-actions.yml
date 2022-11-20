@@ -41,3 +41,7 @@ jobs:
       - name: Authenticate Salesforce ORG
         run: |
           sfdx force:auth:jwt:grant --clientid ${{ secrets.HUB_CONSUMER_KEY }} --jwtkeyfile  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --setdefaultdevhubusername -a HubOrg
+      
+      - name: Validate Source Code Against Salesforce ORG
+        run: |
+          sfdx force:source:deploy -p force-app -c -u HubOrg
