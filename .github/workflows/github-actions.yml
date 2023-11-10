@@ -1,12 +1,11 @@
-name: Developer Pipeline
-run-name: ${{ github.actor }} is running pipeline on ${{ github.repository }}
+name: GitHub Actions Demo
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 on: 
-  workflow_dispatch:
   push:
     branches:
-      - developer
-    # paths:
-    #  - 'force-app/**'
+      - feature/*
+    paths:
+      - 'force-app/**'
       
 jobs:
   Explore-GitHub-Actions:
@@ -27,7 +26,6 @@ jobs:
       
   build:
     runs-on: ubuntu-latest
-    needs: [Explore-GitHub-Actions]
     environment: developer
     steps:
       # Checkout the Source code from the latest commit
@@ -38,47 +36,23 @@ jobs:
       - name: Install NPM
         run: |
           npm install
-          
       # Install the SFDX CLI using npm command
       - name: Install the SFDX CLI
         run: |
-          npm install sfdx-cli --global
-          sfdx force --help
-          
-      - name: Install the sfdx-git-delta plugin
-        run: |
-          echo 'y' | sfdx plugins:install sfdx-git-delta
-          
+          npm install @salesforce/cli --global
+          sf --help
       - name: Decrypt the server.key.enc file & store inside assets folder
         run: |
           openssl enc -nosalt -aes-256-cbc -d -in ${{ secrets.ENCRYPTION_KEY_FILE }} -out ${{ secrets.JWT_KEY_FILE }} -base64 -K ${{ secrets.DECRYPTION_KEY }} -iv ${{ secrets.DECRYPTION_IV }}
           
       - name: Authenticate Salesforce ORG
         run: |
-          sfdx force:auth:jwt:grant --clientid ${{ secrets.HUB_CONSUMER_KEY }} --jwtkeyfile  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --setdefaultdevhubusername -a HubOrg --instanceurl ${{ secrets.HUB_LOGIN_URL }} 
+          sf org login jwt --client-id ${{ secrets.HUB_CONSUMER_KEY }} --jwt-key-file  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --set-default --alias HubOrg --instance-url ${{ secrets.HUB_LOGIN_URL }} 
       
-      - name: Generate the package.xml for delta files
+      - name: Validate components to Salesforce
         run: |
-          mkdir delta
-          sfdx sgd:source:delta --to "HEAD" --from "HEAD~1" --output "./delta" --ignore-whitespace -d -i .sgdignore
-          echo "--- package.xml generated with added and modified metadata ---"
-          cat delta/package/package.xml
-      
-      - name: Install the SFDX CLI Scanner
+          sf project deploy validate --manifest delta/package/package.xml --test-level RunLocalTests --target-org HubOrg --coverage-formatters lcov --coverage-formatters clover
+          
+      - name: Deploy Delta components to Salesforce
         run: |
-          echo 'y' | sfdx plugins:install @salesforce/sfdx-scanner
-      
-      - name: Run SFDX CLI Scanner
-        run: |
-          mkdir reports
-          sfdx scanner:run -f html -t "force-app" -e "eslint,retire-js,pmd,cpd" -c "Design,Best Practices,Code Style,Performance,Security" --outfile reports/scan-reports.html
-      
-      - uses: actions/upload-artifact@v3
-        with:
-          name: cli-scan-report
-          path: reports/scan-reports.html
-      
-      - name: Deploy Delta components to Salesofrce
-        run: |
-          sfdx force:source:deploy -p force-app -c -l RunLocalTests -u HubOrg
-  
+          sf project deploy start --manifest delta/package/package.xml --test-level RunLocalTests --target-org HubOrg
