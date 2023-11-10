@@ -1,0 +1,47 @@
+name: Developer Sandbox Org
+# Definition when the workflow should run
+on:
+    push:
+      branches:
+        - developer
+    workflow_dispatch:
+# Jobs to be executed
+jobs:
+
+    Build:
+      name: environment-setup
+      runs-on: ubuntu-latest
+      steps:
+          # Checkout the source code
+
+          - name: 'Checkout source code'
+
+            uses: actions/checkout@v2
+          # Runs a single command using the runners shell
+
+          - name: 'Build and Deploy'
+            run: |
+              wget https://developer.salesforce.com/media/salesforce-cli/sfdx/channels/stable/sfdx-linux-x64.tar.xz
+              mkdir sfdx
+              tar xJf sfdx-linux-x64.tar.xz -C sfdx --strip-components 1
+              ./sfdx/bin/sfdx --version
+
+    # Runs a set of commands using the runners shell
+
+          - name: 'Decrypt file'
+
+            run: openssl enc -nosalt -aes-256-cbc -d -in assets/server.key.enc -out server.key -base64 -K ${{secrets.DECRYPTION_KEY}} -iv ${{secrets.DECRYPTION_IV}}
+
+          - name: 'Authorize'
+
+            run: |
+
+             sfdx force:auth:jwt:grant --clientid=${{ secrets.CONSUMERKEY_SEPT24BCK_SFDCCICD }} --username=${{ secrets.SFDCCICD_USERNAME }} --jwtkeyfile server.key
+
+          - name: 'Convert Metadata'
+
+            run: sfdx force:source:convert --rootdir=force-app --outputdir=convert
+
+          - name: 'Run Test on Metadata'
+
+            run: sfdx force:mdapi:deploy --deploydir=convert --testlevel=RunSpecifiedTests --checkonly -u hub-org
