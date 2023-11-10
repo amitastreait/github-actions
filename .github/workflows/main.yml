@@ -38,7 +38,8 @@ jobs:
       - name: Install CLI
         run: |
           npm install
-          npm install sfdx-cli --global
+          npm install @salesforce/cli --global
+          sf --help
           
       # Run PMD scan
       - name: 'Run PMD scan'
@@ -64,12 +65,12 @@ jobs:
           
       - name: Install the SFDX Git Delta Plugin
         run: |
-          echo 'y' | sfdx plugins:install sfdx-git-delta
+          echo 'y' | sf plugins install sfdx-git-delta
       
       - name: Generate the Delta Since Last Commit
         run: |
           mkdir delta
-          sfdx sgd:source:delta --to "HEAD" --from "HEAD~1" --output "./delta" -i .sgdignore -d
+          sf sgd source delta --to "HEAD" --from "HEAD~1" --output "./delta" -i .sgdignore -d
           cat delta/package/package.xml
       
       - name: Decrypt server key
@@ -79,16 +80,15 @@ jobs:
       
       - name: Authenticate Salesforce ORG
         run: |
-          sfdx force --help
-          sfdx force:auth:jwt:grant --clientid ${{ secrets.HUB_CONSUMER_KEY }} --jwtkeyfile  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --setdefaultdevhubusername -a HubOrg
+          sf org login jwt --client-id ${{ secrets.HUB_CONSUMER_KEY }} --jwt-key-file  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --set-default --alias HubOrg --instance-url ${{ secrets.HUB_LOGIN_URL }} 
     
       - name: Install SFDX CLI Scanner
         run: |
-          echo 'y' | sfdx plugins:install @salesforce/sfdx-scanner
+          echo 'y' | sf plugins install @salesforce/sfdx-scanner
           
       - name: Run SFDX CLI Scanner
         run: |
-          sfdx scanner:run -f html -t "force-app" -e "eslint,retire-js,pmd,cpd" -c "Design,Best Practices,Code Style,Performance,Security" --outfile ./reports/scan-reports.html
+          sf scanner run -f html -t "force-app" -e "eslint,retire-js,pmd,cpd" -c "Design,Best Practices,Code Style,Performance,Security" --outfile reports/scan-reports.html
           
       - uses: actions/upload-artifact@v3
         with:
@@ -105,15 +105,20 @@ jobs:
         run: |
           # npm install
           npm install @salesforce/sfdx-lwc-jest --save-dev
+
+      - name: Validate components to Salesforce
+        run: |
+          sf project deploy validate --manifest delta/package/package.xml --test-level RunLocalTests --target-org HubOrg --coverage-formatters clover
           
       - name: Deploy code to Salesforce Org
         if: github.event.pull_request.merged == true
         run: |
-          echo "Deploying Code to Org"
-          sfdx force:source:deploy -x delta/package/package.xml -u HubOrg # --postdestructivechanges destructiveChanges/destructiveChanges.xml
+          echo "Deploying Code to Org."
+          sf project deploy start --manifest delta/package/package.xml --test-level RunLocalTests --target-org HubOrg --coverage-formatters clover
 
       - name: 'Run Apex tests'
-        run: sfdx force:apex:test:run -c -r human -d ./tests/apex -w 20 -u HubOrg
+        run: |
+          sf apex run --target-org HubOrg --file ~/test.apex
         
       - name: 'Delete coverage file (temporary step)'
         run: rm ./tests/apex/test-result-707*-codecoverage.json
@@ -127,13 +132,13 @@ jobs:
       - name: 'Lint Lightning Web Components'
         run: |
           # npm run lint:lwc
-          echo "Lint Lightning Web Components"
+          echo "Lint Lightning Web Components."
         
       - name: Run the Jest coverage script
         if: github.event.pull_request.merged == true
         run: |
           npm run test:unit:coverage
-          echo "Run the Jest coverage script"
+          echo "Run the Jest coverage script."
           
       - uses: codecov/codecov-action@v3
         with:
