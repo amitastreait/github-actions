@@ -1,47 +1,36 @@
 name: Developer Sandbox Org
-# Definition when the workflow should run
+
 on:
     push:
       branches:
         - developer
     workflow_dispatch:
-# Jobs to be executed
-jobs:
 
+jobs:
     Build:
       name: environment-setup
       runs-on: ubuntu-latest
       steps:
-          # Checkout the source code
-
-          - name: 'Checkout source code'
-
-            uses: actions/checkout@v2
-          # Runs a single command using the runners shell
-
-          - name: 'Build and Deploy'
+          # Checkout the Source code from the latest commit
+          - uses: actions/checkout@v3
+            with:
+              fetch-depth: 0
+          - name: Install the SFDX CLI
             run: |
-              wget https://developer.salesforce.com/media/salesforce-cli/sfdx/channels/stable/sfdx-linux-x64.tar.xz
-              mkdir sfdx
-              tar xJf sfdx-linux-x64.tar.xz -C sfdx --strip-components 1
-              ./sfdx/bin/sfdx --version
-
-    # Runs a set of commands using the runners shell
-
-          - name: 'Decrypt file'
-
-            run: openssl enc -nosalt -aes-256-cbc -d -in assets/server.key.enc -out server.key -base64 -K ${{secrets.DECRYPTION_KEY}} -iv ${{secrets.DECRYPTION_IV}}
-
-          - name: 'Authorize'
-
+              npm install @salesforce/cli --global
+              sf --help
+          - name: Decrypt the server.key.enc file & store inside assets folder
             run: |
-
-             sfdx force:auth:jwt:grant --clientid=${{ secrets.CONSUMERKEY_SEPT24BCK_SFDCCICD }} --username=${{ secrets.SFDCCICD_USERNAME }} --jwtkeyfile server.key
-
-          - name: 'Convert Metadata'
-
-            run: sfdx force:source:convert --rootdir=force-app --outputdir=convert
-
-          - name: 'Run Test on Metadata'
-
-            run: sfdx force:mdapi:deploy --deploydir=convert --testlevel=RunSpecifiedTests --checkonly -u hub-org
+              openssl enc -nosalt -aes-256-cbc -d -in ${{ secrets.ENCRYPTION_KEY_FILE }} -out ${{ secrets.JWT_KEY_FILE }} -base64 -K ${{ secrets.DECRYPTION_KEY }} -iv ${{ secrets.DECRYPTION_IV }}
+              
+          - name: Authenticate Salesforce ORG
+            run: |
+              sf org login jwt --client-id ${{ secrets.HUB_CONSUMER_KEY }} --jwt-key-file  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --set-default --alias HubOrg --instance-url ${{ secrets.HUB_LOGIN_URL }} 
+          
+          - name: Validate components to Salesforce
+            run: |
+              sf project deploy validate --manifest delta/package/package.xml --test-level RunLocalTests --target-org HubOrg --coverage-formatters clover
+              
+          - name: Deploy Delta components to Salesforce
+            run: |
+              sf project deploy start --manifest delta/package/package.xml --test-level RunLocalTests --target-org HubOrg --coverage-formatters clover
