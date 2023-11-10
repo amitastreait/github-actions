@@ -108,13 +108,13 @@ jobs:
 
       - name: Validate components to Salesforce
         run: |
-          sf project deploy validate --manifest delta/package/package.xml --test-level RunLocalTests --target-org HubOrg --coverage-formatters lcov --coverage-formatters clover
+          sf project deploy validate --manifest delta/package/package.xml --test-level RunLocalTests --target-org HubOrg --coverage-formatters clover
           
       - name: Deploy code to Salesforce Org
         if: github.event.pull_request.merged == true
         run: |
           echo "Deploying Code to Org."
-          sf project deploy start --manifest delta/package/package.xml --test-level RunLocalTests --target-org HubOrg
+          sf project deploy start --manifest delta/package/package.xml --test-level RunLocalTests --target-org HubOrg --coverage-formatters clover
 
       - name: 'Run Apex tests'
         run: |
