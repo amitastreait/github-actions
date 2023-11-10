@@ -152,12 +152,12 @@ build:
       # Install the SFDX CLI using the npm command
       - name: Install the SFDX CLI
         run: |
-          npm install sfdx-cli --global
-          sfdx force --help
+          npm install @salesforce/cli --global
+          sf --help
 ````
 If you are making the changes in GitHub directly, then commit the changes and see the magic. If you are making the changes in the local repo then you need to commit and push the changes to a remote branch.
 
-> Note: The indentation is very important in the pipeline. So you need to be very careful. You can use [Online YML Validator](https://codebeautify.org/yaml-validator) to validate your YML file
+> Note: The indentation is significant in the pipeline. So you need to be very careful. You can use [Online YML Validator](https://codebeautify.org/yaml-validator) to validate your YML file
 
 Here is the `yml` file after making the above changes
 ````yml
@@ -192,11 +192,11 @@ jobs:
       - name: Install NPM
         run: |
           npm install
-      # Install the SFDX CLI using the npm command
-      - name: Install the SFDX CLI
+      # Install the Salesforce CLI using the npm command
+      - name: Install the Salesforce CLI
         run: |
-          npm install sfdx-cli --global
-          sfdx force --help
+          npm install @salesforce/cli --global
+          sf --help
 ````
 ![image](https://user-images.githubusercontent.com/14299807/202890065-8593f4a4-a170-4492-8cb4-f1dc633c5405.png)
 ![image](https://user-images.githubusercontent.com/14299807/202890093-409cd78e-c6db-4ac8-90ca-1553f9a44bb1.png)
@@ -222,28 +222,39 @@ In the above step, we have successfully installed the SFDX Pipeline the next ste
 ### Authenticate to Salesforce using Pipeline
 After we have decrypted the `server.key` in the previous and have got the key file that we need to for authentication. Now, the time is to authenticate to Salesforce Username using JWT. Below is the command for authentication
 ````cmd
-sfdx force:auth:jwt:grant --clientid YOUR_CLIENT_ID --jwtkeyfile assets/server.key --username SALESFORCE_USERNAME --setdefaultdevhubusername -a HubOrg
+sf org login jwt --client-id YOUR_CLIENT_ID --jwt-key-file assets/server.key --username SALESFORCE_USERNAME --set-default --alias HubOrg --instance-url SALESFORCE_ORG_URL
 ````
 #### Note
 > Replace YOUR_CLIENT_ID with your salesforce-connected app consumer key
 > Replace SALESFORCE_USERNAME with the salesforce deployment username
+> Replace SALESFORCE_ORG_URL with the Salesforce Login Url
 
 After making the changes, commit & push those changes to the remote branch and see the outcome! You must see the success message like below
 ![image](https://user-images.githubusercontent.com/14299807/202892367-688da254-9257-4f41-912d-fafcd427cf0c.png)
 
 ### Validate the code base to Salesforce Org
-Congratulations 🎉, You have successfully authenticated to Salesforce Org. Now, the last step that is remaining is validating the code base to Salesforce Org. To validate/deploy the code base uses the below sfdx command
+Congratulations 🎉, You have successfully authenticated to Salesforce Org. Now, the last step that is remaining is validating the code base to Salesforce Org. To validate/deploy the code base uses the below sf command
 ````cmd
-sfdx force:source:deploy -p force-app -c -u HubOrg
+sf project deploy validate --source-dir force-ap --test-level RunLocalTests --target-org HubOrg
+OR
+sf project deploy validate --manifest delta/package/package.xml --test-level RunLocalTests --target-org HubOrg
 ````
 #### Where
-- `-p` path to source code
-- `-c` remove this if you want to deploy. -c is used to indicate that the code will be validated but not deployed
-- `-u` the target org username that is HubOrg as we have used HubOrg as an alias in the authentication command
+- `--source-dir` path to source code
+- `--target-org` the target org username that is HubOrg as we have used HubOrg as an alias in the authentication command
+
+### Deploy the code base to Salesforce Org
+Congratulations 🎉, You have successfully authenticated to Salesforce Org. Now, the last step that is remaining is validating the code base to Salesforce Org. To validate/deploy the code base uses the below sf command
+````cmd
+sf project deploy start --source-dir force-ap --test-level RunLocalTests --target-org HubOrg
+OR
+sf project deploy start --manifest delta/package/package.xml --test-level RunLocalTests --target-org HubOrg
+````
+#### Where
+- `--source-dir` path to source code
+- `--target-org` the target org username that is HubOrg as we have used HubOrg as an alias in the authentication command
 
 ![image](https://user-images.githubusercontent.com/14299807/202892963-509076a0-4052-444c-8b54-4c340244347c.png)
-
-> If you want to do the direct deployment then remove `-c` from the above sfdx command
 
 WoooooHoooooo 🎉 You have successfully developed a simple GitHub Action Pipeline that validates the code against salesforce org every time a push is happening in the repo.
 
@@ -283,19 +294,19 @@ jobs:
       # Install the SFDX CLI using the npm command
       - name: Install the SFDX CLI
         run: |
-          npm install sfdx-cli --global
-          sfdx force --help
+          npm install @salesforce/cli --global
+          sf --help
       - name: Decrypt the server.key.enc file & store inside assets folder
         run: |
           openssl enc -nosalt -aes-256-cbc -d -in assets/server.key.enc -out assets/server.key -base64 -K DECRYPTION_KEY -iv DECRYPTION_IV
           
       - name: Authenticate Salesforce ORG
         run: |
-          sfdx force:auth:jwt:grant --clientid HUB_CONSUMER_KEY --jwtkeyfile assets/server.key --username HUB_USER_NAME --setdefaultdevhubusername -a HubOrg
+          sf org login jwt --client-id HUB_CONSUMER_KEY --jwt-key-file  JWT_KEY_FILE --username HUB_USER_NAME --set-default --alias HubOrg --instance-url HUB_LOGIN_URL
       
       - name: Validate Source Code Against Salesforce ORG
         run: |
-          sfdx force:source:deploy -p force-app -c -u HubOrg
+          sf project deploy start --source-dir force-app --test-level RunLocalTests --target-org HubOrg --coverage-formatters clover
 
 ````
 
@@ -383,19 +394,19 @@ build:
       # Install the SFDX CLI using the npm command
       - name: Install the SFDX CLI
         run: |
-          npm install sfdx-cli --global
-          sfdx force --help
+          npm install @salesforce/cli --global
+          sf --help
       - name: Decrypt the server.key.enc file & store it inside the assets folder
         run: |
           openssl enc -nosalt -aes-256-cbc -d -in ${{ secrets.ENCRYPTION_KEY_FILE }} -out ${{ secrets.JWT_KEY_FILE }} -base64 -K ${{ secrets.DECRYPTION_KEY }} -iv ${{ secrets.DECRYPTION_IV }}
           
       - name: Authenticate Salesforce ORG
         run: |
-          sfdx force:auth:jwt:grant --clientid ${{ secrets.HUB_CONSUMER_KEY }} --jwtkeyfile  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --setdefaultdevhubusername -a HubOrg --instanceurl ${{ secrets.HUB_LOGIN_URL }} 
+          sf org login jwt --client-id ${{ secrets.HUB_CONSUMER_KEY }} --jwt-key-file  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --set-default --alias HubOrg --instance-url ${{ secrets.HUB_LOGIN_URL }}
       
       - name: Validate Source Code Against Salesforce ORG
         run: |
-          sfdx force:source:deploy -p force-app -c -u HubOrg
+          sf project deploy deploy --source-dir force-app --test-level RunLocalTests --target-org HubOrg --coverage-formatters clover
 ````
 
 Commit and publish the changes. You will see that no Action is running because no changes have been made to the code base.
@@ -487,7 +498,7 @@ To install the plugin, add the new step before decrypting the `sever.key.inc` fi
 ````yml
 - name: Install the sfdx-git-delta plugin
   run: |
-    echo 'y' | sfdx plugins:install sfdx-git-delta
+    echo 'y' | sf plugins install sfdx-git-delta
 ````
 ![image](https://user-images.githubusercontent.com/14299807/202899508-b119c08c-554d-4bee-b2b4-663ec4e50c7f.png)
 
@@ -499,7 +510,7 @@ Add the below step after the authentication with Salesforce
 - name: Generate the package.xml for delta files
   run: |
     mkdir delta
-    sfdx sgd:source:delta --to "HEAD" --from "HEAD~1" --output "./delta" --ignore-whitespace -d -i .sgdignore
+    sf sgd source delta --to "HEAD" --from "HEAD~1" --output "./delta" --ignore-whitespace -d -i .sgdignore
     echo "--- package.xml generated with added and modified metadata ---"
     cat delta/package/package.xml
 ````
@@ -509,7 +520,7 @@ After you have generated the `package.xml` with the changed components only. Add
 ````yml
 - name: Deploy Delta components to Salesforce
   run: |
-    sfdx force:source:deploy -x delta/package/package.xml -c -l RunLocalTests -u HubOrg
+    sf project deploy start --manifest delta/package/package.xml --test-level RunLocalTests --target-org HubOrg --coverage-formatters clover
 ````
 Commit & publish the yml file.
 > Note- Delete the other deployment step
@@ -569,12 +580,12 @@ jobs:
       # Install the SFDX CLI using the npm command
       - name: Install the SFDX CLI
         run: |
-          npm install sfdx-cli --global
-          sfdx force --help
+          npm install @salesforce/cli --global
+          sf --help
           
       - name: Install the sfdx-git-delta plugin
         run: |
-          echo 'y' | sfdx plugins:install sfdx-git-delta
+          echo 'y' | sf plugins install sfdx-git-delta
           
       - name: Decrypt the server.key.enc file & store it inside assets folder
         run: |
@@ -582,18 +593,18 @@ jobs:
           
       - name: Authenticate Salesforce ORG
         run: |
-          sfdx force:auth:jwt:grant --clientid ${{ secrets.HUB_CONSUMER_KEY }} --jwtkeyfile  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --setdefaultdevhubusername -a HubOrg --instanceurl ${{ secrets.HUB_LOGIN_URL }} 
+          sf org login jwt --client-id ${{ secrets.HUB_CONSUMER_KEY }} --jwt-key-file  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --set-default --alias HubOrg --instance-url ${{ secrets.HUB_LOGIN_URL }}  
       
       - name: Generate the package.xml for delta files
         run: |
           mkdir delta
-          sfdx sgd:source:delta --to "HEAD" --from "HEAD~1" --output "./delta" --ignore-whitespace -d -i .sgdignore
+          sf sgd source delta --to "HEAD" --from "HEAD~1" --output "./delta" --ignore-whitespace -d -i .sgdignore
           echo "--- package.xml generated with added and modified metadata ---"
           cat delta/package/package.xml
       
       - name: Deploy Delta components to Salesforce
         run: |
-          sfdx force:source:deploy -x delta/package/package.xml -c -l RunLocalTests -u HubOrg
+          sf project deploy start --manifest delta/package/package.xml --test-level RunLocalTests --target-org HubOrg --coverage-formatters clover
 ````
 
 # Integrate the Static Code Analysis Tool
@@ -606,7 +617,7 @@ Add the step to install the scanner in your pipeline before deployment step
 ````yml
 - name: Install the SFDX CLI Scanner
   run: |
-    echo 'y' | sfdx plugins:install @salesforce/sfdx-scanner
+    echo 'y' | sf plugins install @salesforce/sfdx-scanner
 ````
 
 ### Run the Code Analysis tool in repo
@@ -614,7 +625,7 @@ The above step will install the scanner and now, we need to run the Scanner to s
 ````yml
 - name: Run SFDX CLI Scanner
   run: |
-    sfdx scanner:run -f html -t "force-app" -e "eslint,retire-js,pmd,cpd" -c "Design,Best Practices,Code Style,Performance,Security" --outfile ./reports/scan-reports.html
+    sf scanner run -f html -t "force-app" -e "eslint,retire-js,pmd,cpd" -c "Design,Best Practices,Code Style,Performance,Security" --outfile reports/scan-reports.html
 ````
 
 ### Upload the Scan report as Artifacts
