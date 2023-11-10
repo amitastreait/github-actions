@@ -42,12 +42,12 @@ jobs:
       # Install the SFDX CLI using npm command
       - name: Install the SFDX CLI
         run: |
-          npm install sfdx-cli --global
-          sfdx force --help
+          npm install @salesforce/cli --global
+          sf --help
           
       - name: Install the sfdx-git-delta plugin
         run: |
-          echo 'y' | sfdx plugins:install sfdx-git-delta
+          echo 'y' | sf plugins install sfdx-git-delta
           
       - name: Decrypt the server.key.enc file & store inside assets folder
         run: |
@@ -55,23 +55,23 @@ jobs:
           
       - name: Authenticate Salesforce ORG
         run: |
-          sfdx force:auth:jwt:grant --clientid ${{ secrets.HUB_CONSUMER_KEY }} --jwtkeyfile  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --setdefaultdevhubusername -a HubOrg --instanceurl ${{ secrets.HUB_LOGIN_URL }} 
+          sf org login jwt --client-id ${{ secrets.HUB_CONSUMER_KEY }} --jwt-key-file  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --set-default --alias HubOrg --instance-url ${{ secrets.HUB_LOGIN_URL }} 
       
       - name: Generate the package.xml for delta files
         run: |
           mkdir delta
-          sfdx sgd:source:delta --to "HEAD" --from "HEAD~1" --output "./delta" --ignore-whitespace -d -i .sgdignore
+          sf sgd source delta --to "HEAD" --from "HEAD~1" --output "./delta" --ignore-whitespace -d -i .sgdignore
           echo "--- package.xml generated with added and modified metadata ---"
           cat delta/package/package.xml
       
       - name: Install the SFDX CLI Scanner
         run: |
-          echo 'y' | sfdx plugins:install @salesforce/sfdx-scanner
+          echo 'y' | sf plugins install @salesforce/sfdx-scanner
       
       - name: Run SFDX CLI Scanner
         run: |
           mkdir reports
-          sfdx scanner:run -f html -t "force-app" -e "eslint,retire-js,pmd,cpd" -c "Design,Best Practices,Code Style,Performance,Security" --outfile reports/scan-reports.html
+          sf scanner run -f html -t "force-app" -e "eslint,retire-js,pmd,cpd" -c "Design,Best Practices,Code Style,Performance,Security" --outfile reports/scan-reports.html
       
       # Run Apex PMD Scan
       - name: 'Run PMD scan'
@@ -101,14 +101,17 @@ jobs:
           path: reports/scan-reports.html
       
       # Run Sonar Cloud Scan
-      
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      
-      - name: Deploy Delta components to Salesofrce
+
+      - name: Validate components to Salesforce
         run: |
-          sfdx force:source:deploy -x delta/package/package.xml -c -l RunLocalTests -u HubOrg
+          sf project deploy validate --manifest delta/package/package.xml --test-level RunLocalTests --target-org HubOrg --coverage-formatters lcov --coverage-formatters clover
+          
+      - name: Deploy Delta components to Salesforce
+        run: |
+          sf project deploy start --manifest delta/package/package.xml --test-level RunLocalTests --target-org HubOrg
     
