@@ -11,7 +11,6 @@ on:
       - hotfix/**
       - release/**
 
-
  # Uncomment the below 2 lines by removing the hashtag, if you want to run your pipeline only when the changes are in the Salesforce metadata
     #paths:
     #  - 'force-app/**'
@@ -61,13 +60,13 @@ jobs:
         with:
           payload: |
             {
-              "text": "Danny Torrence left a 1-star review for your property.",
+              "text": "GitHub Action build result: ${{ job.status }} \n ${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Danny Torrence left the following review for your property:"
+                    "text": "GitHub Action build result: ${{ job.status }} \n ${{ github.event.pull_request.html_url || github.event.head_commit.url }}:"
                   }
                 },
                 {
@@ -75,7 +74,7 @@ jobs:
                   "block_id": "section567",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "<https://example.com|Overlook Hotel> \\n :star: \\n Doors had too many axe holes, guest in room 237 was far too rowdy, the whole place felt stuck in the 1920s."
+                    "text": "<https://example.com|Overlook Hotel> :star: \n Doors had too many axe holes, guest in room 237 was far too rowdy, the whole place felt stuck in the 1920s."
                   },
                   "accessory": {
                     "type": "image",
@@ -89,7 +88,7 @@ jobs:
                   "fields": [
                     {
                       "type": "mrkdwn",
-                      "text": "*Average Rating*\\n1.0"
+                      "text": "*Average Rating* \n 1.0"
                     }
                   ]
                 }
@@ -206,7 +205,7 @@ jobs:
         id: validate-pull-request-components
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          sf project deploy validate --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover
+          sf project deploy validate --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json
 
       # Delta deployment will be beneficial to make the deployment faster
       # Remove the if condition if you want to generate delta files for push events    
@@ -214,7 +213,7 @@ jobs:
         id: deploy-pull-request-component
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          sf project deploy start --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover
+          sf project deploy start --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json
 
       # Validate all the components that are available inside manifest/package.xml location
       # The validation will happen only if the event is push
@@ -222,7 +221,7 @@ jobs:
         id: validate-push-components
         if: ${{ github.event_name == 'push' }}
         run: |
-          sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover
+          sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json
 
       # Deploy all the components that are available inside manifest/package.xml location
       # The Deployment will happen only if the event is push
@@ -230,8 +229,7 @@ jobs:
         id: deploy-push-components
         if: ${{ github.event_name == 'push' }}
         run: |
-          sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover
-    
+          sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json
 
       - uses: act10ns/slack@v2
         with: 
