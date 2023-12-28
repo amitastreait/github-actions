@@ -1,4 +1,4 @@
-name: Production Pipeline
+name: GitHub Action Pipeline Template
 run-name: ${{ github.actor }} is running pipeline on ${{ github.repository }}
 on: 
   workflow_dispatch:
@@ -27,6 +27,7 @@ on:
 env:
   TESTLEVEL: RunLocalTests
   TESTCLASSES: AccountTriggerTest, AccountTriggerHandlerTest
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       
 jobs:
   Explore-GitHub-Actions:
@@ -55,27 +56,34 @@ jobs:
     steps:
       # Checkout the Source code from the latest commit
       - uses: actions/checkout@v4
+        id: checkout-code
         with:
           fetch-depth: 0
           
       - name: Installing NPM
+        id: install-npm
         run: |
           npm install
       # Install the SFDX CLI using the npm command
       - name: Installing the Salesforce CLI
+        id: install-salesforce-cli
         run: |
           npm install @salesforce/cli --global
           sf --help
           
       - name: Installing the sfdx-git-delta plugin
+        id: install-sfdx-delta-plugin
+        if: ${{ github.event_name == 'pull_request' }}
         run: |
           echo 'y' | sf plugins install sfdx-git-delta
           
       - name: Decrypting the server.key.enc file & store it inside the assets folder
+        id: decrypt-key
         run: |
           openssl enc -nosalt -aes-256-cbc -d -in ${{ secrets.ENCRYPTION_KEY_FILE }} -out ${{ secrets.JWT_KEY_FILE }} -base64 -K ${{ secrets.DECRYPTION_KEY }} -iv ${{ secrets.DECRYPTION_IV }}
           
       - name: Authenticating with Salesforce ORG
+        id: authenticate-salesforce
         run: |
           sf org login jwt --client-id ${{ secrets.HUB_CONSUMER_KEY }} --jwt-key-file  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --set-default --alias HubOrg --instance-url ${{ secrets.HUB_LOGIN_URL }} 
       
@@ -83,6 +91,7 @@ jobs:
       # Delta deployment will be beneficial to make the deployment faster
       # Remove the if condition if you want to generate delta files for push events
       - name: Generate the package.xml for delta files
+        id: generate-delta-files
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           mkdir delta
@@ -91,11 +100,13 @@ jobs:
           cat delta/package/package.xml
       
       - name: Installing the SFDX CLI Scanner
+        id: install-sfdx-scanner
         run: |
           echo 'y' | sf plugins install @salesforce/sfdx-scanner
 
       # run the security scan in all the files and store the result at reports/scan-reports.html location
       - name: Run SFDX CLI Scanner
+        id: run-sfdx-scanner
         run: |
           mkdir reports
           sf scanner run -f html -t "force-app" -e "eslint,retire-js,pmd,cpd" -c "Design,Best Practices,Code Style,Performance,Security" --outfile reports/scan-reports.html
@@ -114,21 +125,25 @@ jobs:
         # if: steps.pmd.outputs.violations != 0
         run: |
           # exit 1
+          echo steps.pmd.outpurs.violations
           echo "test"
       
       - name: Upload SARIF file
         # if: steps.pmd.outputs.violations != 0
+        id: upload-sarif-file
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: pmd-report.sarif
       
       - uses: actions/upload-artifact@v3
+        id: upload-scanner-report
         with:
           name: cli-scan-report
           path: reports/scan-reports.html
       
       # Run Sonar Cloud Scan
       - name: SonarCloud Scan
+        id: run-sona-cloud-scan
         uses: sonarsource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -137,6 +152,7 @@ jobs:
       # Delta deployment will be beneficial to make the deployment faster
       # Remove the if condition if you want to generate delta files for push events
       - name: Validate components to Salesforce
+        id: validate-pull-request-components
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           sf project deploy validate --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover
@@ -144,6 +160,7 @@ jobs:
       # Delta deployment will be beneficial to make the deployment faster
       # Remove the if condition if you want to generate delta files for push events    
       - name: Deploy Delta components to Salesforce
+        id: deploy-pull-request-component
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           sf project deploy start --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover
@@ -151,6 +168,7 @@ jobs:
       # Validate all the components that are available inside manifest/package.xml location
       # The validation will happen only if the event is push
       - name: Validating components to Salesforce
+        id: validate-push-components
         if: ${{ github.event_name == 'push' }}
         run: |
           sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover
@@ -158,6 +176,7 @@ jobs:
       # Deploy all the components that are available inside manifest/package.xml location
       # The Deployment will happen only if the event is push
       - name: Deploying Delta components to Salesforce
+        id: deploy-push-components
         if: ${{ github.event_name == 'push' }}
         run: |
           sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover
