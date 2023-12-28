@@ -54,6 +54,12 @@ jobs:
     # use the environment if there are different environments based on the different Salesforce Org.
     environment: production
     steps:
+
+      - uses: act10ns/slack@v2
+        with:
+          status: ${{ job.status }}
+        if: always()
+     
       # Checkout the Source code from the latest commit
       - uses: actions/checkout@v4
         id: checkout-code
@@ -181,3 +187,9 @@ jobs:
         run: |
           sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover
     
+
+      - uses: act10ns/slack@v2
+        with: 
+          status: ${{ job.status }}
+          steps: ${{ toJson(steps) }}
+        if: always()
