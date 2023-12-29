@@ -156,7 +156,9 @@ jobs:
         id: validate-pull-request-components
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          sf project deploy validate --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > validate.json || true
+          sf project deploy validate --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover 
+          # --json > validate.json || true
+          # node ./scripts/parseValidateResult.js
 
       # Delta deployment will be beneficial to make the deployment faster
       # Remove the if condition if you want to generate delta files for push events    
@@ -164,7 +166,9 @@ jobs:
         id: deploy-pull-request-component
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          sf project deploy start --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json  > deploy.json || true
+          sf project deploy start --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover 
+          # --json  > deploy.json || true
+          # node ./scripts/parseDeployResult.js
 
 
 # Installing the jq to parse the sf command response
@@ -179,8 +183,8 @@ jobs:
         id: validate
         if: ${{ github.event_name == 'push' }}
         run: |
-          sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json 
-          # > validate.json || true
+          sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover
+          # --json  > validate.json || true
           # node ./scripts/parseValidateResult.js
 
       # Deploy all the components that are available inside the manifest/package.xml location
@@ -189,8 +193,8 @@ jobs:
         id: deploy
         if: ${{ github.event_name == 'push' }}
         run: |
-          sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json 
-          # > deploy.json || true
+          sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover
+          # --json  > deploy.json || true
           # node ./scripts/parseDeployResult.js
           
       - uses: act10ns/slack@v2
