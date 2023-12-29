@@ -215,37 +215,41 @@ jobs:
         run: |
           sf project deploy start --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > deployment.json
 
-      # Validate all the components that are available inside manifest/package.xml location
+      # Validate all the components that are available inside the manifest/package.xml location
       # The validation will happen only if the event is push
       - name: Validating components to Salesforce
-        id: validate-push-components
+        id: validate
         if: ${{ github.event_name == 'push' }}
         run: |
           sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > result.json
 
-      - name: Extract all keywords from package.json
+      - name: Extract all validation results from package.json
         uses: sergeysova/jq-action@v2
+        if: steps.validate.outcome != 'success'
         id: keywords
         with:
           cmd: 'jq .keywords[] result.json -r'
           multiline: true
       
-      - name: Show keywords
+      - name: Show validation outcome
+        if: steps.validate.outcome != 'success'
         run: |
+          echo "version ${{ steps.version.outputs.value }}"
           keywords="${{ steps.keywords.outputs.value }}"
           for keyword in $keywords; do
             echo "$keyword"
           done
 
-      # Deploy all the components that are available inside manifest/package.xml location
+      # Deploy all the components that are available inside the manifest/package.xml location
       # The Deployment will happen only if the event is push
       - name: Deploying Delta components to Salesforce
-        id: deploy-push-components
+        id: deploy
         if: ${{ github.event_name == 'push' }}
         run: |
           sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > deployment.json
 
       - name: Extract all keywords from package.json
+        if: steps.deploy.outcome != 'success'
         uses: sergeysova/jq-action@v2
         id: deployments
         with:
@@ -253,6 +257,7 @@ jobs:
           multiline: true
       
       - name: Show keywords
+        if: steps.deploy.outcome != 'success'
         run: |
           keywords="${{ steps.deployments.outputs.value }}"
           for keyword in $keywords; do
