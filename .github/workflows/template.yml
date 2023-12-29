@@ -229,7 +229,7 @@ jobs:
         if: ${{ github.event_name == 'push' }}
         run: |
           sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > validate.json || true
-          node /scripts/parseValidateResult.js
+          node ./scripts/parseValidateResult.js
 
       - name: Send custom JSON data to Slack workflow
         id: slacksend
