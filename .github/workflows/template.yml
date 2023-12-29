@@ -205,7 +205,7 @@ jobs:
         id: validate-pull-request-components
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          sf project deploy validate --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json
+          sf project deploy validate --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > validate.json || true
 
       # Delta deployment will be beneficial to make the deployment faster
       # Remove the if condition if you want to generate delta files for push events    
@@ -213,12 +213,13 @@ jobs:
         id: deploy-pull-request-component
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          sf project deploy start --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json 
+          sf project deploy start --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json  > deploy.json || true
 
 
-      - name: Install jq
-        id: install-jq
-        uses: dcarbone/install-jq-action@v2.1.0
+# Installing the jq to parse the sf command response
+      # - name: Install jq
+       # id: install-jq
+       # uses: dcarbone/install-jq-action@v2.1.0
     
 
       # Validate all the components that are available inside the manifest/package.xml location
@@ -227,8 +228,16 @@ jobs:
         id: validate
         if: ${{ github.event_name == 'push' }}
         run: |
-          sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json | jq
-          
+          sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > validate.json || true
+          node /scripts/parseValidateResult.js
+
+      - name: Send custom JSON data to Slack workflow
+        id: slacksend
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload-file-path: "slackPayload.json"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       # Deploy all the components that are available inside the manifest/package.xml location
       # The Deployment will happen only if the event is push
@@ -236,7 +245,7 @@ jobs:
         id: deploy
         if: ${{ github.event_name == 'push' }}
         run: |
-          sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json | jq
+          sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > deploy.json || true
 
       - uses: act10ns/slack@v2
         with: 
