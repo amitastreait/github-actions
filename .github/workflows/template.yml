@@ -221,27 +221,14 @@ jobs:
         id: validate
         if: ${{ github.event_name == 'push' }}
         run: |
-          sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > result.json
+          validate_result = sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json
+          echo "validate_result=$validate_result" >> "$GITHUB_OUTPUT"
+          echo "$validate_result"
 
-      - name: Extract all validation results from result.json
-        uses: sergeysova/jq-action@v2
-        # if: ${{ steps.validate.outcome == 'failure' }}
-        if: failure()
-        id: keywords
-        with:
-          cmd: 'jq .keywords[] result.json -r'
-          multiline: true
-      
-      - name: Show validation outcome
-        # if: ${{ steps.validate.outcome == 'failure' }}
-        if: failure()
+      - name: Use that secret output (protected by a mask)
         run: |
-          echo "${{ steps.validate.outcome }}"
-          echo "version ${{ steps.keywords.outputs.value }}"
-          keywords="${{ steps.keywords.outputs.value }}"
-          for keyword in $keywords; do
-            echo "$keyword"
-          done
+          echo "the secret number is ${{ steps.validate.outputs.validate_result }}"
+      
 
       # Deploy all the components that are available inside the manifest/package.xml location
       # The Deployment will happen only if the event is push
