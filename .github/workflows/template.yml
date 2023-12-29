@@ -54,50 +54,6 @@ jobs:
     environment: production
     steps:
 
-      - name: Send GitHub trigger payload to Slack Workflow Builder
-        id: slack
-        uses: slackapi/slack-github-action@v1.24.0
-        with:
-          payload: |
-            {
-              "text": "GitHub Action build result: ${{ job.status }} \n ${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "GitHub Action build result: ${{ job.status }} \n ${{ github.event.pull_request.html_url || github.event.head_commit.url }}:"
-                  }
-                },
-                {
-                  "type": "section",
-                  "block_id": "section567",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "<https://example.com|Overlook Hotel> :star: \n Doors had too many axe holes, guest in room 237 was far too rowdy, the whole place felt stuck in the 1920s."
-                  },
-                  "accessory": {
-                    "type": "image",
-                    "image_url": "https://is5-ssl.mzstatic.com/image/thumb/Purple3/v4/d3/72/5c/d3725c8f-c642-5d69-1904-aa36e4297885/source/256x256bb.jpg",
-                    "alt_text": "Haunted hotel image"
-                  }
-                },
-                {
-                  "type": "section",
-                  "block_id": "section789",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Average Rating* \n 1.0"
-                    }
-                  ]
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-
       # post a slack notification that the job has started
       - uses: act10ns/slack@v2
         with:
@@ -228,14 +184,14 @@ jobs:
         id: validate
         if: ${{ github.event_name == 'push' }}
         run: |
-          sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > validate.json || true
+          sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > validate.json
           node ./scripts/parseValidateResult.js
 
       - name: Send custom JSON data to Slack workflow
         id: slacksend
         uses: slackapi/slack-github-action@v1.24.0
         with:
-          payload-file-path: "slackPayload.json"
+          payload-file-path: ".scripts/slackPayload.json"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -245,7 +201,7 @@ jobs:
         id: deploy
         if: ${{ github.event_name == 'push' }}
         run: |
-          sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > deploy.json || true
+          sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > deploy.json
 
       - uses: act10ns/slack@v2
         with: 
