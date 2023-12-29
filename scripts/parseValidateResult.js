@@ -6,7 +6,7 @@ let summaryText = '';
 let colorCode = '#008000';
 if(result.status == 1){
      colorCode = '#FF0000';
-     summaryText = `❌ ${JSON.stringify(result)} Validation to Salesforce Org has been failed with the error ${result.message} and return code ${result.code} with status code as ${result.status}`
+     summaryText = `❌ Validation to Salesforce Org has been failed with the error ${result.message} and return code ${result.code} with status code as ${result.status}`
 } else {
     colorCode = '#008000';
     summaryText = `✅ Validation to Salesforce Org has been passed 🎉 and return code ${result.code} with status code as ${result.status} `
