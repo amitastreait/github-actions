@@ -11,7 +11,7 @@ if(result.status == 1){
     colorCode = '#008000';
     summaryText = `✅ Validation to Salesforce Org has been passed 🎉 and return code ${result.code} with status code as ${result.status} `
 }
-
+/*
 let slackPayload = {
 	"attachments": [
 		{
@@ -35,20 +35,27 @@ let slackPayload = {
 		}
 	]
 };
-/*
+*/
 let slackPayload = {
       "text": summaryText,
       "blocks": [
-        {
-          "type": "section",
-          "text": {
-            "type": "mrkdwn",
-            text: "`Error Message while validating the Components "+ result.message + "`"
-          }
-        }
-      ]
+	{
+		"type": "section",
+		"text": {
+			"type": "mrkdwn",
+			"text": summaryText
+		}
+	},
+	{
+		"type": "section",
+		"text": {
+			"type": "mrkdwn",
+			"text": "`" + result.message + "`"
+		}
+	}
+    ]
 };
-*/
+
 // Convert the object to a JSON string
 const jsonData = JSON.stringify(slackPayload); 
 
