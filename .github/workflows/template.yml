@@ -225,16 +225,19 @@ jobs:
 
       - name: Extract all validation results from result.json
         uses: sergeysova/jq-action@v2
-        if: steps.validate.outcome == 'failure'
+        # if: ${{ steps.validate.outcome == 'failure' }}
+        if: failure()
         id: keywords
         with:
           cmd: 'jq .keywords[] result.json -r'
           multiline: true
       
       - name: Show validation outcome
-        if: steps.validate.outcome == 'failure'
+        # if: ${{ steps.validate.outcome == 'failure' }}
+        if: failure()
         run: |
-          echo "version ${{ steps.version.outputs.value }}"
+          echo "${{ steps.validate.outcome }}"
+          echo "version ${{ steps.keywords.outputs.value }}"
           keywords="${{ steps.keywords.outputs.value }}"
           for keyword in $keywords; do
             echo "$keyword"
