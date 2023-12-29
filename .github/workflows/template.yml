@@ -205,7 +205,7 @@ jobs:
         id: validate-pull-request-components
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          sf project deploy validate --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > result.json
+          sf project deploy validate --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json
 
       # Delta deployment will be beneficial to make the deployment faster
       # Remove the if condition if you want to generate delta files for push events    
@@ -213,7 +213,7 @@ jobs:
         id: deploy-pull-request-component
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          sf project deploy start --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > deployment.json
+          sf project deploy start --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json 
 
 
       - name: Install jq
@@ -236,24 +236,8 @@ jobs:
         id: deploy
         if: ${{ github.event_name == 'push' }}
         run: |
-          sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > deployment.json
+          sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json | jq
 
-      - name: Extract all keywords from package.json
-        if: steps.deploy.outcome == 'failure'
-        uses: sergeysova/jq-action@v2
-        id: deployments
-        with:
-          cmd: 'jq .keywords[] deployment.json -r'
-          multiline: true
-      
-      - name: Show keywords
-        if: steps.deploy.outcome == 'failure'
-        run: |
-          keywords="${{ steps.deployments.outputs.value }}"
-          for keyword in $keywords; do
-            echo "$keyword"
-          done
-          
       - uses: act10ns/slack@v2
         with: 
           status: ${{ job.status }}
