@@ -192,7 +192,7 @@ jobs:
         id: slacksend
         uses: slackapi/slack-github-action@v1.24.0
         with:
-          payload-file-path: "./scripts/slackPayload.json"
+          payload-file-path: "slackPayload.json"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -209,3 +209,23 @@ jobs:
           status: ${{ job.status }}
           steps: ${{ toJson(steps) }}
         if: always()
+
+      - name: Post to a Slack channel
+        id: slack
+        if: always()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          # For posting a simple plain text message
+          payload: |
+            {
+              "text": "See github action results",
+              "blocks": [
+              		{
+              			"type": "section",
+              			"text": {
+              				"type": "mrkdwn",
+              				"text": "To see the complete output of the github actions, click *<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>*"
+              			}
+              		}
+               ]
+            }
