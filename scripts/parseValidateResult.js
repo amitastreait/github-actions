@@ -3,14 +3,39 @@ const fs = require('fs')
 let result = JSON.parse(fs.readFileSync('validate.json'));
 
 let summaryText = '';
-
+let colorCode = '#008000';
 if(result.status == 1){
-     summaryText = `❌ Validation to Salesforce Org has been failed with the error ${result.message} and return code ${result.code} with status code as ${result.status}`
-}
-else{
+     colorCode = '#FF0000';
+     summaryText = `❌ ${JSON.stringify(result)} Validation to Salesforce Org has been failed with the error ${result.message} and return code ${result.code} with status code as ${result.status}`
+} else {
+    colorCode = '#008000';
     summaryText = `✅ Validation to Salesforce Org has been passed 🎉 and return code ${result.code} with status code as ${result.status} `
 }
 
+let slackPayload = {
+	"attachments": [
+		{
+			"color": colorCode,
+			"blocks": [
+                    {
+					"type": "section",
+					"text": {
+						"type": "mrkdwn",
+						"text": summaryText
+					}
+				},
+				{
+					"type": "section",
+					"text": {
+						"type": "mrkdwn",
+						"text": "`" + result.message + "`"
+					}
+				}
+			]
+		}
+	]
+};
+/*
 let slackPayload = {
       "text": summaryText,
       "blocks": [
@@ -18,12 +43,12 @@ let slackPayload = {
           "type": "section",
           "text": {
             "type": "mrkdwn",
-            text: '`'+ result.message + result.status + ( typeof result.status ) + '`'
+            text: "`Error Message while validating the Components "+ result.message + "`"
           }
         }
       ]
 };
-
+*/
 // Convert the object to a JSON string
 const jsonData = JSON.stringify(slackPayload); 
 
