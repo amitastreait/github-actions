@@ -49,16 +49,11 @@ jobs:
       - run: echo "🍏 This job's status is ${{ job.status }}."
       
   build:
+    needs: [Explore-GitHub-Actions]
     runs-on: ubuntu-latest
     # use the environment if there are different environments based on the different Salesforce Org.
     environment: production
     steps:
-
-      # post a slack notification that the job has started
-      - uses: act10ns/slack@v2
-        with:
-          status: ${{ job.status }}
-        if: always()
      
       # Checkout the Source code from the latest commit
       - uses: actions/checkout@v4
