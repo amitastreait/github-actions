@@ -215,20 +215,20 @@ jobs:
         run: |
           sf project deploy start --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > deployment.json
 
+
+      - name: Install jq
+        id: install-jq
+        uses: dcarbone/install-jq-action@v2.1.0
+    
+
       # Validate all the components that are available inside the manifest/package.xml location
       # The validation will happen only if the event is push
       - name: Validating components to Salesforce
         id: validate
         if: ${{ github.event_name == 'push' }}
         run: |
-          validate_result = sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json
-          echo "validate_result=$validate_result" >> "$GITHUB_OUTPUT"
-          echo "$validate_result"
-
-      - name: Use that secret output (protected by a mask)
-        run: |
-          echo "the secret number is ${{ steps.validate.outputs.validate_result }}"
-      
+          sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json | jq
+          
 
       # Deploy all the components that are available inside the manifest/package.xml location
       # The Deployment will happen only if the event is push
