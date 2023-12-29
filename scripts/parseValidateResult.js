@@ -26,17 +26,17 @@ let summaryBlock = {
 }
 
 slackPayload.blocks.push(summaryBlock);
-
+let message = result.message || '';
 // Add the error message 
 let block = {
       type: 'section',
       text: {
           type: 'mrkdwn',
-          text: '`'+result.message+'`'
+          text: '`'+ message +'`'
       }
-  }
+}
 
-  slackPayload.blocks.push(block);
+slackPayload.blocks.push(block);
 
 // Convert the object to a JSON string
 const jsonData = JSON.stringify(slackPayload); 
