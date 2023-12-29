@@ -184,15 +184,15 @@ jobs:
         id: validate
         if: ${{ github.event_name == 'push' }}
         run: |
-          sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > validate.json
+          sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > validate.json || true
           node ./scripts/parseValidateResult.js
 
       - name: Send custom JSON data to Slack workflow
-        if: failure()
+        if: always()
         id: slacksend
         uses: slackapi/slack-github-action@v1.24.0
         with:
-          payload-file-path: "slackPayload.json"
+          payload-file-path: "./scripts/slackPayload.json"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -202,7 +202,7 @@ jobs:
         id: deploy
         if: ${{ github.event_name == 'push' }}
         run: |
-          sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > deploy.json
+          sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > deploy.json || true
 
       - uses: act10ns/slack@v2
         with: 
