@@ -192,7 +192,7 @@ jobs:
         id: slacksend
         uses: slackapi/slack-github-action@v1.24.0
         with:
-          payload-file-path: ".scripts/slackPayload.json"
+          payload-file-path: "./scripts/slackPayload.json"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
