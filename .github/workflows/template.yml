@@ -1,0 +1,249 @@
+name: GitHub Action Pipeline Template
+run-name: ${{ github.actor }} is running pipeline on ${{ github.repository }}
+on: 
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - main
+      - developer
+      - feature/**
+      - hotfix/**
+      - release/**
+
+ # Uncomment the below 2 lines by removing the hashtag, if you want to run your pipeline only when the changes are in the Salesforce metadata
+    #paths:
+    #  - 'force-app/**'
+  pull_request:
+    types: [closed]
+    branches:
+      - master
+      - main
+    paths:
+      - 'force-app/**'
+
+# declare the local variables that are accessible within the complete pipeline
+env:
+  TESTLEVEL: RunLocalTests
+  TESTCLASSES: AccountTriggerTest, AccountTriggerHandlerTest
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "All github parameters ${{ toJson(github) }} "
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
+      - name: List files in the repository
+        run: |
+          ls ${{ github.workspace }}
+      - run: echo "🍏 This job's status is ${{ job.status }}."
+      
+  build:
+    needs: [Explore-GitHub-Actions]
+    runs-on: ubuntu-latest
+    # use the environment if there are different environments based on the different Salesforce Org.
+    environment: production
+    steps:
+     
+      # Checkout the Source code from the latest commit
+      - uses: actions/checkout@v4
+        id: checkout-code
+        with:
+          fetch-depth: 0
+          
+      - name: Installing NPM
+        id: install-npm
+        run: |
+          npm install
+      # Install the SFDX CLI using the npm command
+      - name: Installing the Salesforce CLI
+        id: install-salesforce-cli
+        run: |
+          npm install @salesforce/cli --global
+          sf --help
+          
+      - name: Installing the sfdx-git-delta plugin
+        id: install-sfdx-delta-plugin
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          echo 'y' | sf plugins install sfdx-git-delta
+          
+      - name: Decrypting the server.key.enc file & store it inside the assets folder
+        id: decrypt-key
+        run: |
+          openssl enc -nosalt -aes-256-cbc -d -in ${{ secrets.ENCRYPTION_KEY_FILE }} -out ${{ secrets.JWT_KEY_FILE }} -base64 -K ${{ secrets.DECRYPTION_KEY }} -iv ${{ secrets.DECRYPTION_IV }}
+          
+      - name: Authenticating with Salesforce ORG
+        id: authenticate-salesforce
+        run: |
+          sf org login jwt --client-id ${{ secrets.HUB_CONSUMER_KEY }} --jwt-key-file  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --set-default --alias HubOrg --instance-url ${{ secrets.HUB_LOGIN_URL }} 
+      
+      # generate the package.xml file with the metadata file with modifications.
+      # Delta deployment will be beneficial to make the deployment faster
+      # Remove the if condition if you want to generate delta files for push events
+      - name: Generate the package.xml for delta files
+        id: generate-delta-files
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          mkdir delta
+          sf sgd source delta --to "HEAD" --from "HEAD~1" --output "./delta" --ignore-whitespace -d -i .sgdignore
+          echo "--- package.xml generated with added and modified metadata ---"
+          cat delta/package/package.xml
+      
+      - name: Installing the SFDX CLI Scanner
+        id: install-sfdx-scanner
+        run: |
+          echo 'y' | sf plugins install @salesforce/sfdx-scanner
+
+      # run the security scan in all the files and store the result at reports/scan-reports.html location
+      - name: Run SFDX CLI Scanner
+        id: run-sfdx-scanner
+        run: |
+          mkdir reports
+          sf scanner run -f html -t "force-app" -e "eslint,retire-js,pmd,cpd" -c "Design,Best Practices,Code Style,Performance,Security" --outfile reports/scan-reports.html
+      
+      # Run Apex PMD Scan
+      - name: 'Run PMD scan'
+        uses: pmd/pmd-github-action@v1
+        id: pmd
+        with:
+            sourcePath: 'force-app'
+            rulesets: 'ruleset.xml'
+            analyzeModifiedFilesOnly: false
+
+      # Check for PMD violations
+      - name: 'Check for PMD violations'
+        # if: steps.pmd.outputs.violations != 0
+        run: |
+          # exit 1
+          echo steps.pmd.outpurs.violations
+          echo "test"
+      
+      - name: Upload SARIF file
+        # if: steps.pmd.outputs.violations != 0
+        id: upload-sarif-file
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: pmd-report.sarif
+      
+      - uses: actions/upload-artifact@v3
+        id: upload-scanner-report
+        with:
+          name: cli-scan-report
+          path: reports/scan-reports.html
+      
+      # Run Sonar Cloud Scan
+      - name: SonarCloud Scan
+        id: run-sona-cloud-scan
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      # Delta deployment will be beneficial to make the deployment faster
+      # Remove the if condition if you want to generate delta files for push events
+      - name: Validate components to Salesforce
+        id: validate-pull-request-components
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          sf project deploy validate --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover 
+          # --json > validate.json || true
+          # node ./scripts/parseValidateResult.js
+
+      # Delta deployment will be beneficial to make the deployment faster
+      # Remove the if condition if you want to generate delta files for push events    
+      - name: Deploy Delta components to Salesforce
+        id: deploy-pull-request-component
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          sf project deploy start --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover 
+          # --json  > deploy.json || true
+          # node ./scripts/parseDeployResult.js
+
+
+# Installing the jq to parse the sf command response
+      # - name: Install jq
+       # id: install-jq
+       # uses: dcarbone/install-jq-action@v2.1.0
+    
+
+      # Validate all the components that are available inside the manifest/package.xml location
+      # The validation will happen only if the event is push
+      - name: Validating components to Salesforce
+        id: validate
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover
+          # --json  > validate.json || true
+          # node ./scripts/parseValidateResult.js
+
+      # Deploy all the components that are available inside the manifest/package.xml location
+      # The Deployment will happen only if the event is push
+      - name: Deploying Delta components to Salesforce
+        id: deploy
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover
+          # --json  > deploy.json || true
+          # node ./scripts/parseDeployResult.js
+          
+      - uses: act10ns/slack@v2
+        with: 
+          status: ${{ job.status }}
+          steps: ${{ toJson(steps) }}
+          config: .github/config/slack.yml
+        if: always()
+
+      # Post the Message into the Slack channel about the Salesforce Deployment Validation
+      #- name: Send custom JSON data to Slack workflow
+      #  if: always()
+      #  id: Slack-Validation-Message
+      #  uses: slackapi/slack-github-action@v1.24.0
+      #  with:
+      #    payload-file-path: "slackPayload.json"
+      #  env:
+      #    SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      # Post the Message into the Slack channel about the Salesforce Deployment
+      #- name: Send custom JSON data to Slack workflow
+       # if: always()
+        #id: Slack-Deployment-Message
+        #uses: slackapi/slack-github-action@v1.24.0
+        #with:
+         # payload-file-path: "slackDeploymentPayload.json"
+        #env:
+        #  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      # Post the final message with the Build Result
+      - name: Post to a Slack channel
+        id: slack
+        if: always()
+        uses: slackapi/slack-github-action@v1.24.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        with:
+          # For posting a rich message using Block Kit
+          payload: |
+            {
+              "text": "GitHub Action build result: ${{ job.status }} \n ${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "To see the complete output of the github actions, click *<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>*"
+                  }
+                }
+              ]
+            }
