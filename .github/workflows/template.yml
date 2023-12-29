@@ -205,7 +205,7 @@ jobs:
         id: validate-pull-request-components
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          sf project deploy validate --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json
+          sf project deploy validate --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > result.json
 
       # Delta deployment will be beneficial to make the deployment faster
       # Remove the if condition if you want to generate delta files for push events    
@@ -213,7 +213,7 @@ jobs:
         id: deploy-pull-request-component
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          sf project deploy start --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json
+          sf project deploy start --manifest delta/package/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > deployment.json
 
       # Validate all the components that are available inside manifest/package.xml location
       # The validation will happen only if the event is push
@@ -221,7 +221,21 @@ jobs:
         id: validate-push-components
         if: ${{ github.event_name == 'push' }}
         run: |
-          sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json
+          sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > result.json
+
+      - name: Extract all keywords from package.json
+        uses: sergeysova/jq-action@v2
+        id: keywords
+        with:
+          cmd: 'jq .keywords[] result.json -r'
+          multiline: true
+      
+      - name: Show keywords
+        run: |
+          keywords="${{ steps.keywords.outputs.value }}"
+          for keyword in $keywords; do
+            echo "$keyword"
+          done
 
       # Deploy all the components that are available inside manifest/package.xml location
       # The Deployment will happen only if the event is push
@@ -229,8 +243,22 @@ jobs:
         id: deploy-push-components
         if: ${{ github.event_name == 'push' }}
         run: |
-          sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json
+          sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > deployment.json
 
+      - name: Extract all keywords from package.json
+        uses: sergeysova/jq-action@v2
+        id: deployments
+        with:
+          cmd: 'jq .keywords[] deployment.json -r'
+          multiline: true
+      
+      - name: Show keywords
+        run: |
+          keywords="${{ steps.deployments.outputs.value }}"
+          for keyword in $keywords; do
+            echo "$keyword"
+          done
+          
       - uses: act10ns/slack@v2
         with: 
           status: ${{ job.status }}
