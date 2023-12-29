@@ -223,16 +223,16 @@ jobs:
         run: |
           sf project deploy validate --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > result.json
 
-      - name: Extract all validation results from package.json
+      - name: Extract all validation results from result.json
         uses: sergeysova/jq-action@v2
-        if: steps.validate.outcome != 'success'
+        if: steps.validate.outcome == 'failure'
         id: keywords
         with:
           cmd: 'jq .keywords[] result.json -r'
           multiline: true
       
       - name: Show validation outcome
-        if: steps.validate.outcome != 'success'
+        if: steps.validate.outcome == 'failure'
         run: |
           echo "version ${{ steps.version.outputs.value }}"
           keywords="${{ steps.keywords.outputs.value }}"
@@ -249,7 +249,7 @@ jobs:
           sf project deploy start --manifest manifest/package.xml --test-level $TESTLEVEL --target-org HubOrg --coverage-formatters clover --json > deployment.json
 
       - name: Extract all keywords from package.json
-        if: steps.deploy.outcome != 'success'
+        if: steps.deploy.outcome == 'failure'
         uses: sergeysova/jq-action@v2
         id: deployments
         with:
@@ -257,7 +257,7 @@ jobs:
           multiline: true
       
       - name: Show keywords
-        if: steps.deploy.outcome != 'success'
+        if: steps.deploy.outcome == 'failure'
         run: |
           keywords="${{ steps.deployments.outputs.value }}"
           for keyword in $keywords; do
