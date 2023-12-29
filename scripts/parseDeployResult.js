@@ -44,4 +44,4 @@ for(const res of result?.result?.details?.componentFailures){
 const jsonData = JSON.stringify(slackPayload); 
 
 // Write the JSON string to the file
-fs.writeFileSync('slackPayload.json', jsonData, 'utf-8');
+fs.writeFileSync('slackDeploymentPayload.json', jsonData, 'utf-8');
