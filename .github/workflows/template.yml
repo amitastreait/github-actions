@@ -200,6 +200,7 @@ jobs:
         with: 
           status: ${{ job.status }}
           steps: ${{ toJson(steps) }}
+          config: .github/config/slack.yml
         if: always()
 
       # Post the Message into the Slack channel about the Salesforce Deployment Validation
