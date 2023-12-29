@@ -6,10 +6,9 @@ let summaryText = '';
 let colorCode = '#008000';
 if(result.status == 1){
      colorCode = '#FF0000';
-     summaryText = "❌ Validation to Salesforce Org has been failed with the \n *Error :* ";
-     // "`result.message`"
-     summaryText += '`' + result.message + '`' ;
-     summaryText += ` and \n *return code* : ${result.code} \n *with status code* : ${result.status}`
+     summaryText = "❌ Validation to Salesforce Org failed ";
+     //summaryText += "\n *Error :*" + "`" + result.message + "`";
+     //summaryText += " \n *return code* : "+ result.code +" \n *with status code* : "+ result.status
 } else {
     colorCode = '#008000';
     summaryText = `✅ Validation to Salesforce Org has been passed 🎉 and \n *return code* : ${result.code} \n with *status code* : ${result.status} `
@@ -43,13 +42,6 @@ let slackPayload = {
 let slackPayload = {
       "text": summaryText,
       "blocks": [
-	{
-		"type": "section",
-		"text": {
-			"type": "mrkdwn",
-			"text": summaryText
-		}
-	},
 	{
 		"type": "section",
 		"text": {
