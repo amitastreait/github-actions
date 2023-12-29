@@ -5,10 +5,10 @@ let result = JSON.parse(fs.readFileSync('validate.json'));
 let summaryText = '';
 
 if(result.status == 1){
-     summaryText = `❌ Validation to Salesforce Org has been failed`
+     summaryText = `❌ Validation to Salesforce Org has been failed with the error ${result.message} and return code ${result.code} with status code as ${result.status}`
 }
 else{
-    summaryText = `✅ Validation to Salesforce Org has been passed 🎉 `
+    summaryText = `✅ Validation to Salesforce Org has been passed 🎉 and return code ${result.code} with status code as ${result.status} `
 }
 
 let slackPayload = {
