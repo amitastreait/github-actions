@@ -29,7 +29,49 @@ env:
   SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       
 jobs:
+
+  check-body-length:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: check
+        env:
+          PRNUM: ${{ github.event.pull_request.number }}
+          PRBODY: ${{ github.event.pull_request.body }}
+          TESTBODY: ${{ github.event.inputs.body }}
+          TEST: ${{ github.event.inputs.test }}
+        run: |
+          if [ "$TEST" = "true" ]
+          then
+            PRBODY=$TESTBODY
+          fi
+          commentPR () {
+            if [ "$TEST" = "true" ]
+            then
+              echo "would comment: '${1}'"
+            else
+              gh pr comment $PRNUM -b "${1}"
+            fi
+          }
+          if [ "$PRBODY" = "" ]
+          then
+            commentPR "Thanks! Please add a body so we can better review your contribution."
+          fi
+
+  Explore-Matrix-Run:
+    needs: [check-body-length]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-16.04, ubuntu-18.04]
+        node: [6, 8, 10]
+    steps:
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+          
   Explore-GitHub-Actions:
+    needs: [Explore-Matrix-Run]
     runs-on: ubuntu-latest
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
@@ -53,7 +95,14 @@ jobs:
     # use the environment if there are different environments based on the different Salesforce Org.
     environment: production
     steps:
-     
+
+    # Notify Slack that the job has started
+      - uses: act10ns/slack@v2
+        with:
+          status: starting
+          message: Starting Salesforce deployment and validation for *<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|build>*
+        if: always()
+        
       # Checkout the Source code from the latest commit
       - uses: actions/checkout@v4
         id: checkout-code
@@ -247,3 +296,51 @@ jobs:
                 }
               ]
             }
+
+  create_issue:
+    needs: [build]
+    name: Create issue if the Build Fails
+    runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      issues: write
+    steps:
+      - name: Create an issue if the Build Fails
+        run: |
+          if [[ $CLOSE_PREVIOUS == true ]]; then
+            previous_issue_number=$(gh issue list \
+              --label "$LABELS" \
+              --json number \
+              --jq '.[0].number')
+            if [[ -n $previous_issue_number ]]; then
+              gh issue close "$previous_issue_number"
+              gh issue unpin "$previous_issue_number"
+            fi
+          fi
+          new_issue_url=$(gh issue create \
+            --title "$TITLE" \
+            --assignee "$ASSIGNEES" \
+            --label "$LABELS" \
+            --body "$BODY")
+          if [[ $PINNED == true ]]; then
+            gh issue pin "$new_issue_url"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TITLE: "There were issues validating the build : *${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}*"
+          ASSIGNEES: ${{ github.actor }}
+          LABELS: validation issue,pr-issue,${{ github.run_id }}, ${{github.sha}}
+          BODY: |
+            ### Review the following
+
+            - [ ] Check the issues
+            - [ ] Fix the issues in the developer org
+            - [ ] Perform thorough testing in your org
+            - [ ] Push the changes again
+
+            ### Discussion Points
+            Connect with peers or your lead to discuss about the issue if needed
+            
+          PINNED: false
+          CLOSE_PREVIOUS: false
