@@ -4,8 +4,6 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - master
-      - main
       - developer
       - feature/**
       - hotfix/**
@@ -15,7 +13,7 @@ on:
     #paths:
     #  - 'force-app/**'
   pull_request:
-    types: [closed]
+    #types: [closed]
     branches:
       - master
       - main
