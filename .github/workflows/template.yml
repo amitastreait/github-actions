@@ -73,11 +73,7 @@ jobs:
     #  matrix:
     #    environment: [developer, production, qa, integration]
     uses: "./.github/workflows/reusable-workflow.yml"
-    permissions:
-      id-token: write
-      contents: read
-      issues: write
-      pull-requests: write
+    permissions: write-all
     with:
       environment: production
       TESTLEVEL: RunLocalTests
