@@ -330,7 +330,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           TITLE: "There were issues validating the build : *${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}*"
           ASSIGNEES: ${{ github.actor }}
-          LABELS: validation issue,pr-issue,${{ github.run_id }}, ${{github.sha}}
+          LABELS: bug
           BODY: |
             ### Review the following
 
