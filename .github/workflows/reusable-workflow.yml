@@ -43,34 +43,6 @@ env:
   
 jobs:
   
-  add-comment-in-pr-if-required:
-  
-    # define the required permissions for the Job to perform the necessary actions like
-    # uploading the SARIF file or using GitHub CLI for creating
-    # issues, labels, comments and etc
-    permissions:
-      pull-requests: write
-      
-    if: ${{ github.event_name == 'pull_request' }}
-    runs-on: ubuntu-latest
-    name: Add PR Comment
-    environment: ${{inputs.environment}}
-     
-    # declare the Job level variables that are accessible within this job
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
-    steps:
-      - name: check
-        env:
-          PRNUM: ${{ github.event.pull_request.number }}
-          PRBODY: ${{ github.event.pull_request.body }}
-        run: |
-          gh pr comment $PRNUM -b "Thanks! Please the proper details in the body of the PR, so we can better review your contribution."
-          #if [ "$PRBODY" = "" ] then
-          #  gh pr comment $PRNUM -b "Thanks! Please the proper details in the body of the PR, so we can better review your contribution."
-          #fi
-
   build:
   
     # define the required permissions for the Job to perform the necessary actions like
