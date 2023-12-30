@@ -300,7 +300,8 @@ jobs:
     needs: [build]
     name: Create issue if the Build Fails
     runs-on: ubuntu-latest
-    if: always()
+    if: ${{ github.event_name == 'pull_request' && failure() && vars.CREATE_ISSUE == 'true' }}
+    #if: always()
     permissions:
       issues: write
     steps:
