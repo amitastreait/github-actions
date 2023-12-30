@@ -27,9 +27,9 @@ on:
     paths:
       - 'force-app/**'
     # you may only define one of the `paths` and the `paths-ignore` for a single event
-    paths-ignore:
-      - '.github/**'
-      - 'scripts/**'
+    #paths-ignore:
+    #  - '.github/**'
+    #  - 'scripts/**'
 
 # declare the local variables that are accessible within the complete pipeline
 env:
