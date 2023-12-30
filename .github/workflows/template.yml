@@ -67,38 +67,21 @@ jobs:
             commentPR "Thanks! Please the proper details in the body of the PR, so we can better review your contribution."
           fi
 
-  Explore-Matrix-Run:
-    #needs: [add-comment-in-pr-if-required]
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: [6, 8, 10]
-    steps:
-      - uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node }}
-          
-  Explore-GitHub-Actions:
-    needs: [Explore-Matrix-Run]
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
+  call-reusable-workflow-with-passing-data:
+    #strategy:
+    #  matrix:
+    #    environment: [developer, production, qa, integration]
+    uses: "${{github.actor}}/${{ github.repository }}/.github/workflows/reusable-workflow.yml"
+    with:
+      environment: production
+      TESTLEVEL: $TESTLEVEL
+      TESTCLASSES: $TESTCLASSES
+      CREATE_ISSUE: true
+      #TARGET_ORG: ${{matrix.environment}}
+    secrets: inherit
       
   build:
-    needs: [Explore-GitHub-Actions]
+    #needs: [add-comment-in-pr-if-required]
     runs-on: ubuntu-latest
     # use the environment if there are different environments based on the different Salesforce Org.
     environment: production
