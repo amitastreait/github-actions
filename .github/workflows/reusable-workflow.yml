@@ -1,3 +1,4 @@
+name: Reusable Workflow
 # Create a reusable YML file that will be used for all the branches or Salesforce environments
 on:
   workflow_call:
