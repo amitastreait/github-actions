@@ -47,6 +47,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     name: Add the Comment to PR if Required
+    environment: ${{inputs.environment}}
     # declare the Job level variables that are accessible within this job
     env:
       TESTLEVEL: RunLocalTests
