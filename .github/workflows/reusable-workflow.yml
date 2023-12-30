@@ -288,6 +288,7 @@ jobs:
     needs: [build]
     name: Create issue if the Build Fails
     runs-on: ubuntu-latest
+    environment: ${{inputs.environment}}
     if: ${{ github.event_name == 'pull_request' && failure() && inputs.CREATE_ISSUE == true }}
     #if: always()
     permissions:
@@ -314,6 +315,7 @@ jobs:
             gh issue pin "$new_issue_url"
           fi
         env:
+          
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           TITLE: "There were issues validating the build : *${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}*"
