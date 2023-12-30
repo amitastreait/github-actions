@@ -50,9 +50,8 @@ jobs:
     environment: ${{inputs.environment}}
     # declare the Job level variables that are accessible within this job
     env:
-      TESTLEVEL: RunLocalTests
-      TESTCLASSES: AccountTriggerTest, AccountTriggerHandlerTest
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
     steps:
       - name: check
         env:
