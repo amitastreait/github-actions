@@ -3,20 +3,12 @@ run-name: ${{ github.actor }} is running GitHub Actions templates
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - master
-      - release/*
-      - feature/*
-    paths:
-        - 'force-app/**'
-  pull_request:
-    types: [opened, synchronize, reopened, closed]
-    branches:
-        - master
-    paths:
-        - 'force-app/**'
+  #pull_request:
+    #types: [opened, synchronize, reopened, closed]
+    #branches:
+    #    - master
+    #paths:
+    #    - 'force-app/**'
       
 jobs:
   build:

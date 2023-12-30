@@ -1,11 +1,6 @@
 name: Developer Sandbox Org
 
 on:
-    push:
-      branches:
-        - developer
-      paths:
-       - 'force-app/**'
     workflow_dispatch:
 
 jobs:

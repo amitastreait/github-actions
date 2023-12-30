@@ -1,0 +1,333 @@
+# Create a reusable YML file that will be used for all the branches or Salesforce environments
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      TESTLEVEL:
+        required: false
+        type: string
+      TESTCLASSES:
+        required: false
+        type: string
+      CREATE_ISSUE:
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      SLACK_WEBHOOK_URL:
+        required: true
+      ENCRYPTION_KEY_FILE:
+        required: true
+      JWT_KEY_FILE:
+       required: true
+      DECRYPTION_KEY:
+       required: true
+      DECRYPTION_IV:
+       required: true
+      HUB_CONSUMER_KEY:
+       required: true
+      HUB_USER_NAME:
+       required: true
+      HUB_LOGIN_URL:
+       required: true
+      SONAR_TOKEN:
+       required: true
+
+# declare the local variables that are accessible within the complete pipeline
+env:
+  TESTLEVEL: RunLocalTests
+  TESTCLASSES: AccountTriggerTest, AccountTriggerHandlerTest
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  
+jobs:
+  
+  add-comment-in-pr-if-required:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    name: Add the Comment to PR if Required
+    environment: ${{inputs.environment}}
+    # declare the Job level variables that are accessible within this job
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+    steps:
+      - name: check
+        env:
+          PRNUM: ${{ github.event.pull_request.number }}
+          PRBODY: ${{ github.event.pull_request.body }}
+        run: |
+          if [ "$PRBODY" = "" ]
+          then
+            gh pr comment $PRNUM -b "Thanks! Please the proper details in the body of the PR, so we can better review your contribution."
+          fi
+
+  build:
+    # define the required permissions for the Job to perform the necessary actions like
+    # uploading the SARIF file or using GitHub CLI for creating
+    # issues, labels, comments and etc
+    permissions:
+      pull-requests: write
+      security-events: write
+      actions: read
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    
+    # use the environment if there are different environments based on the different Salesforce Org.
+    environment: ${{inputs.environment}}
+    steps:
+
+    # Notify Slack that the job has started
+      - uses: act10ns/slack@v2
+        with:
+          status: starting
+          message: Starting Salesforce deployment and validation for *<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|build>*
+        if: always()
+        
+      # Checkout the Source code from the latest commit
+      - uses: actions/checkout@v4
+        id: checkout-code
+        with:
+          fetch-depth: 0
+          
+      - name: Installing NPM
+        id: install-npm
+        run: |
+          npm install
+      # Install the SFDX CLI using the npm command
+      - name: Installing the Salesforce CLI
+        id: install-salesforce-cli
+        run: |
+          npm install @salesforce/cli --global
+          sf --help
+          
+      - name: Installing the sfdx-git-delta plugin
+        id: install-sfdx-delta-plugin
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          echo 'y' | sf plugins install sfdx-git-delta
+          
+      - name: Decrypting the server.key.enc file & store it inside the assets folder
+        id: decrypt-key
+        run: |
+          openssl enc -nosalt -aes-256-cbc -d -in ${{ secrets.ENCRYPTION_KEY_FILE }} -out ${{ secrets.JWT_KEY_FILE }} -base64 -K ${{ secrets.DECRYPTION_KEY }} -iv ${{ secrets.DECRYPTION_IV }}
+          
+      - name: Authenticating with Salesforce ORG
+        id: authenticate-salesforce
+        run: |
+          sf org login jwt --client-id ${{ secrets.HUB_CONSUMER_KEY }} --jwt-key-file  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --set-default --alias HubOrg --instance-url ${{ secrets.HUB_LOGIN_URL }} 
+      
+      # generate the package.xml file with the metadata file with modifications.
+      # Delta deployment will be beneficial to make the deployment faster
+      # Remove the if condition if you want to generate delta files for push events
+      - name: Generate the package.xml for delta files
+        id: generate-delta-files
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          mkdir delta
+          sf sgd source delta --to "HEAD" --from "HEAD~1" --output "./delta" --ignore-whitespace -d -i .sgdignore
+          echo "--- package.xml generated with added and modified metadata ---"
+          cat delta/package/package.xml
+      
+      - name: Installing the SFDX CLI Scanner
+        id: install-sfdx-scanner
+        run: |
+          echo 'y' | sf plugins install @salesforce/sfdx-scanner
+
+      # run the security scan in all the files and store the result at reports/scan-reports.html location
+      - name: Run SFDX CLI Scanner
+        id: run-sfdx-scanner
+        run: |
+          mkdir reports
+          sf scanner run -f html -t "force-app" -e "eslint,retire-js,pmd,cpd" -c "Design,Best Practices,Code Style,Performance,Security" --outfile reports/scan-reports.html
+      
+      # Run Apex PMD Scan
+      - name: 'Run PMD scan'
+        uses: pmd/pmd-github-action@v1
+        id: pmd
+        with:
+            sourcePath: 'force-app'
+            rulesets: 'ruleset.xml'
+            analyzeModifiedFilesOnly: false
+
+      # Check for PMD violations
+      - name: 'Check for PMD violations'
+        # if: ${{steps.pmd.outputs.violations != 0 }}
+        run: |
+          # exit 1
+          echo "PMD Violatons ${{steps.pmd.outputs.violations}} "
+          echo "PMD outputs ${{toJSON(steps.pmd.outputs)}} "
+          echo "test"
+      
+      - name: Upload SARIF file
+        # if:  ${{steps.pmd.outputs.violations != 0 }}
+        
+        id: upload-sarif-file
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: pmd-report.sarif
+      
+      - uses: actions/upload-artifact@v3
+        id: upload-scanner-report
+        with:
+          name: cli-scan-report
+          path: reports/scan-reports.html
+      
+      # Run Sonar Cloud Scan
+      - name: SonarCloud Scan
+        id: run-sona-cloud-scan
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      # Delta deployment will be beneficial to make the deployment faster
+      # Remove the if condition if you want to generate delta files for push events
+      - name: Validate components to Salesforce
+        id: validate-pull-request-components
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          sf project deploy validate --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover 
+          # --json > validate.json || true
+          # node ./scripts/parseValidateResult.js
+
+      # Delta deployment will be beneficial to make the deployment faster
+      # Remove the if condition if you want to generate delta files for push events    
+      - name: Deploy Delta components to Salesforce
+        id: deploy-pull-request-component
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          sf project deploy start --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover 
+          # --json  > deploy.json || true
+          # node ./scripts/parseDeployResult.js
+
+
+# Installing the jq to parse the sf command response
+      # - name: Install jq
+       # id: install-jq
+       # uses: dcarbone/install-jq-action@v2.1.0
+    
+
+      # Validate all the components that are available inside the manifest/package.xml location
+      # The validation will happen only if the event is push
+      - name: Validating components to Salesforce
+        id: validate
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          sf project deploy validate --manifest manifest/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover
+          # --json  > validate.json || true
+          # node ./scripts/parseValidateResult.js
+
+      # Deploy all the components that are available inside the manifest/package.xml location
+      # The Deployment will happen only if the event is push
+      - name: Deploying Delta components to Salesforce
+        id: deploy
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          sf project deploy start --manifest manifest/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover
+          # --json  > deploy.json || true
+          # node ./scripts/parseDeployResult.js
+          
+      - uses: act10ns/slack@v2
+        with: 
+          status: ${{ job.status }}
+          steps: ${{ toJson(steps) }}
+          config: .github/config/slack.yml
+        if: always()
+
+      # Post the Message into the Slack channel about the Salesforce Deployment Validation
+      #- name: Send custom JSON data to Slack workflow
+      #  if: always()
+      #  id: Slack-Validation-Message
+      #  uses: slackapi/slack-github-action@v1.24.0
+      #  with:
+      #    payload-file-path: "slackPayload.json"
+      #  env:
+      #    SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      # Post the Message into the Slack channel about the Salesforce Deployment
+      #- name: Send custom JSON data to Slack workflow
+       # if: always()
+        #id: Slack-Deployment-Message
+        #uses: slackapi/slack-github-action@v1.24.0
+        #with:
+         # payload-file-path: "slackDeploymentPayload.json"
+        #env:
+        #  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      # Post the final message with the Build Result
+      - name: Post to a Slack channel
+        id: slack
+        if: always()
+        uses: slackapi/slack-github-action@v1.24.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        with:
+          # For posting a rich message using Block Kit
+          payload: |
+            {
+              "text": "GitHub Action build result: ${{ job.status }} \n ${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "To see the complete output of the github actions, click *<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>*"
+                  }
+                }
+              ]
+            }
+
+  create_issue:
+    needs: [build]
+    name: Create issue if the Build Fails
+    runs-on: ubuntu-latest
+    environment: ${{inputs.environment}}
+    if: ${{ github.event_name == 'pull_request' && failure() && inputs.CREATE_ISSUE == true }}
+    #if: always()
+    permissions:
+      issues: write
+    steps:
+      - name: Create an issue if the Build Fails
+        run: |
+          if [[ $CLOSE_PREVIOUS == true ]]; then
+            previous_issue_number=$(gh issue list \
+              --label "$LABELS" \
+              --json number \
+              --jq '.[0].number')
+            if [[ -n $previous_issue_number ]]; then
+              gh issue close "$previous_issue_number"
+              gh issue unpin "$previous_issue_number"
+            fi
+          fi
+          new_issue_url=$(gh issue create \
+            --title "$TITLE" \
+            --assignee "$ASSIGNEES" \
+            --label "$LABELS" \
+            --body "$BODY")
+          if [[ $PINNED == true ]]; then
+            gh issue pin "$new_issue_url"
+          fi
+        env:
+          
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TITLE: "There were issues validating the build : *${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}*"
+          ASSIGNEES: ${{ github.actor }}
+          LABELS: bug
+          BODY: |
+            ### Review the following
+
+            - [ ] Check the issues
+            - [ ] Fix the issues in the developer org
+            - [ ] Perform thorough testing in your org
+            - [ ] Push the changes again
+
+            ### Discussion Points
+            Connect with peers or your lead to discuss about the issue if needed
+            
+          PINNED: true
+          CLOSE_PREVIOUS: false
