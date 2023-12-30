@@ -33,7 +33,7 @@ on:
       
 jobs:
   Deploy:
-    name: "Validate / Deploy Changes"
+    name: Deploy
     #strategy:
     #  matrix:
     #    environment: [developer, production, qa, integration]
