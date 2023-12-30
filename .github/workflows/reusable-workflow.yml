@@ -50,7 +50,7 @@ jobs:
     environment: ${{inputs.environment}}
     # declare the Job level variables that are accessible within this job
     env:
-      #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
     steps:
       - name: check
