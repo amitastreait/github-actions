@@ -66,9 +66,10 @@ jobs:
           PRNUM: ${{ github.event.pull_request.number }}
           PRBODY: ${{ github.event.pull_request.body }}
         run: |
-          if [ "$PRBODY" = "" ] then
-            gh pr comment $PRNUM -b "Thanks! Please the proper details in the body of the PR, so we can better review your contribution."
-          fi
+          gh pr comment $PRNUM -b "Thanks! Please the proper details in the body of the PR, so we can better review your contribution."
+          #if [ "$PRBODY" = "" ] then
+          #  gh pr comment $PRNUM -b "Thanks! Please the proper details in the body of the PR, so we can better review your contribution."
+          #fi
 
   build:
   
