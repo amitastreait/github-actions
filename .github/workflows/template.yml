@@ -74,7 +74,10 @@ jobs:
     #    environment: [developer, production, qa, integration]
     uses: "./.github/workflows/reusable-workflow.yml"
     permissions:
+      id-token: write
+      contents: read
       issues: write
+      pull-requests: write
     with:
       environment: production
       TESTLEVEL: RunLocalTests
