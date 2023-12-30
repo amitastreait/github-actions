@@ -39,7 +39,7 @@ jobs:
     uses: "./.github/workflows/reusable-workflow.yml"
     permissions:
       security-events: write
-      # only required for workflows in private repositories
+      pull-requests: read|write|none
       actions: read
       contents: read
       issues: write
