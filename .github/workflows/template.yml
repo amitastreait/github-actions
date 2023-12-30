@@ -1,25 +1,32 @@
 name: GitHub Action Pipeline Template
+
 run-name: ${{ github.actor }} is running pipeline on ${{ github.repository }}
+
 on: 
   workflow_dispatch:
   push:
+    # you may only define one of the `branches` and the `branches-ignore` for a single event
     branches:
       - developer
       - feature/**
       - hotfix/**
       - release/**
-    paths-ignore:
-      - '.github/**'
-      - 'scripts/**'
     paths:
       - 'force-app/**'
+    # you may only define one of the `paths` and the `paths-ignore` for a single event
+    #paths-ignore:
+    #  - '.github/**'
+    #  - 'scripts/**'
+    
   pull_request:
     #types: [closed]
+    # you may only define one of the `branches` and the `branches-ignore` for a single event
     branches:
       - master
       - main
     paths:
       - 'force-app/**'
+    # you may only define one of the `paths` and the `paths-ignore` for a single event
     paths-ignore:
       - '.github/**'
       - 'scripts/**'
@@ -32,7 +39,7 @@ env:
       
 jobs:
 
-  check-body-length:
+  add-comment-in-pr-if-required:
     if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
@@ -57,11 +64,11 @@ jobs:
           }
           if [ "$PRBODY" = "" ]
           then
-            commentPR "Thanks! Please add a body so we can better review your contribution."
+            commentPR "Thanks! Please the proper details in the body of the PR, so we can better review your contribution."
           fi
 
   Explore-Matrix-Run:
-    #needs: [check-body-length]
+    #needs: [add-comment-in-pr-if-required]
     runs-on: ubuntu-latest
     strategy:
       matrix:
