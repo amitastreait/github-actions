@@ -44,10 +44,18 @@ env:
 jobs:
   
   add-comment-in-pr-if-required:
+  
+    # define the required permissions for the Job to perform the necessary actions like
+    # uploading the SARIF file or using GitHub CLI for creating
+    # issues, labels, comments and etc
+    permissions:
+      pull-requests: write
+      
     if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
-    name: Add the Comment to PR if Required
+    name: Add PR Comment
     environment: ${{inputs.environment}}
+     
     # declare the Job level variables that are accessible within this job
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -58,27 +66,25 @@ jobs:
           PRNUM: ${{ github.event.pull_request.number }}
           PRBODY: ${{ github.event.pull_request.body }}
         run: |
-          if [ "$PRBODY" = "" ]
-          then
+          if [ "$PRBODY" = "" ] then
             gh pr comment $PRNUM -b "Thanks! Please the proper details in the body of the PR, so we can better review your contribution."
           fi
 
   build:
+  
     # define the required permissions for the Job to perform the necessary actions like
     # uploading the SARIF file or using GitHub CLI for creating
     # issues, labels, comments and etc
     permissions:
-      pull-requests: write
       security-events: write
       actions: read
       contents: read
-      issues: write
     runs-on: ubuntu-latest
     
     # use the environment if there are different environments based on the different Salesforce Org.
     environment: ${{inputs.environment}}
+    
     steps:
-
     # Notify Slack that the job has started
       - uses: act10ns/slack@v2
         with:
@@ -312,7 +318,6 @@ jobs:
             gh issue pin "$new_issue_url"
           fi
         env:
-          
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           TITLE: "There were issues validating the build : *${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}*"
