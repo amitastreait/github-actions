@@ -8,10 +8,11 @@ on:
       - feature/**
       - hotfix/**
       - release/**
-
- # Uncomment the below 2 lines by removing the hashtag, if you want to run your pipeline only when the changes are in the Salesforce metadata
-    #paths:
-    #  - 'force-app/**'
+    paths-ignore:
+      - '.github/**'
+      - 'scripts/**'
+    paths:
+      - 'force-app/**'
   pull_request:
     #types: [closed]
     branches:
@@ -19,6 +20,9 @@ on:
       - main
     paths:
       - 'force-app/**'
+    paths-ignore:
+      - '.github/**'
+      - 'scripts/**'
 
 # declare the local variables that are accessible within the complete pipeline
 env:
