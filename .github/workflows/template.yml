@@ -60,10 +60,9 @@ jobs:
 
   Explore-Matrix-Run:
     #needs: [check-body-length]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-16.04, ubuntu-18.04]
         node: [6, 8, 10]
     steps:
       - uses: actions/setup-node@v1
