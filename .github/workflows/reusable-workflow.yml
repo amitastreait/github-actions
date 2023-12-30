@@ -289,11 +289,10 @@ jobs:
 
   create_issue:
     needs: [build]
-    name: Create issue if the Build Fails
+    name: Create Issue
     runs-on: ubuntu-latest
     environment: ${{inputs.environment}}
     if: ${{ github.event_name == 'pull_request' && failure() && inputs.CREATE_ISSUE == true }}
-    #if: always()
     permissions:
       issues: write
     steps:
