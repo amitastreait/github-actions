@@ -73,10 +73,12 @@ jobs:
     #  matrix:
     #    environment: [developer, production, qa, integration]
     uses: "./.github/workflows/reusable-workflow.yml"
+    permissions:
+      issues: write
     with:
       environment: production
-      TESTLEVEL: ${{ env.TESTLEVEL }}
-      TESTCLASSES: ${{ env.TESTCLASSES }}
+      TESTLEVEL: RunLocalTests
+      TESTCLASSES: AccountTriggerTest, AccountTriggerHandlerTest
       CREATE_ISSUE: true
       #TARGET_ORG: ${{matrix.environment}}
     secrets: inherit
