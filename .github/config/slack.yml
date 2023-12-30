@@ -49,14 +49,14 @@ footer: >-
   <{{repositoryUrl}}|{{repositoryName}}> {{workflow}} #{{runNumber}}
 
 colors:
-  success: '#5DADE2'
-  failure: '#884EA0'
+  success: '#008000'
+  failure: '#ff0000'
   cancelled: '#A569BD'
   default: '#7D3C98'
 
 icons:
   success: ':white_check_mark:'
-  failure: ':grimacing:'
+  failure: ':face_holding_back_tears:'
   cancelled: ':x:'
   skipped: ':heavy_minus_sign:'
   default: ':interrobang:'
