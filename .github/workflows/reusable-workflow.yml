@@ -35,11 +35,23 @@ on:
       SONAR_TOKEN:
        required: true
 
+# declare the local variables that are accessible within the complete pipeline
+env:
+  TESTLEVEL: RunLocalTests
+  TESTCLASSES: AccountTriggerTest, AccountTriggerHandlerTest
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  
 jobs:
-
+  
   add-comment-in-pr-if-required:
     if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
+    name: Add the Comment to PR if Required
+    # declare the Job level variables that are accessible within this job
+    env:
+      TESTLEVEL: RunLocalTests
+      TESTCLASSES: AccountTriggerTest, AccountTriggerHandlerTest
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - name: check
         env:
@@ -66,9 +78,12 @@ jobs:
           fi
 
   build:
+    # define the required permissions for the Job to perform the necessary actions like
+    # uploading the SARIF file or using GitHub CLI for creating
+    # issues, labels, comments and etc
     permissions:
+      pull-requests: write
       security-events: write
-      # only required for workflows in private repositories
       actions: read
       contents: read
       issues: write
