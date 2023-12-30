@@ -1,6 +1,7 @@
 /**
  * Copyright (c), FinancialForce.com, inc
  * All rights reserved.
+
 **/
 public interface fflib_IDomainFactory {
 	fflib_IDomain newInstance(Set<Id> recordIds);
