@@ -31,6 +31,7 @@ on:
     #  - '.github/**'
     #  - 'scripts/**'
 
+
 # declare the local variables that are accessible within the complete pipeline
 env:
   TESTLEVEL: RunLocalTests
@@ -74,8 +75,8 @@ jobs:
     uses: "./.github/workflows/reusable-workflow.yml"
     with:
       environment: production
-      TESTLEVEL: $TESTLEVEL
-      TESTCLASSES: $TESTCLASSES
+      TESTLEVEL: ${{ env.TESTLEVEL }}
+      TESTCLASSES: ${{ env.TESTCLASSES }}
       CREATE_ISSUE: true
       #TARGET_ORG: ${{matrix.environment}}
     secrets: inherit
