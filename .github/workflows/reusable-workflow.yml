@@ -72,11 +72,13 @@ jobs:
         with:
           fetch-depth: 0
       
-      - name: Update ".env.${{inputs.environment}}" file
+      - name: Update .env.${{inputs.environment}} file
         id: update-env-production-file
         run: |
-          echo "\nAWS_ACCESS_KEY=${{secrets.AWS_ACCESS_KEY}}" >> ".env.${{inputs.environment}}"
-          cat ".env.${{inputs.environment}}"
+          echo "AWS_ACCESS_KEY=${{secrets.AWS_ACCESS_KEY}}" >> $GITHUB_ENV
+          echo "DEV_AWS_ACCESS_KEY=${{secrets.AWS_ACCESS_KEY}}" >> $GITHUB_ENV
+          # echo "\nAWS_ACCESS_KEY=${{secrets.AWS_ACCESS_KEY}}" >> ".env.${{inputs.environment}}"
+          cat .env.${{inputs.environment}}
 
       - name: Load .env file
         uses: xom9ikk/dotenv@v2
