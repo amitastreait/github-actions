@@ -190,7 +190,7 @@ jobs:
         id: validate-pull-request-components
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          sf project deploy validate --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover --json
+          sf project deploy validate --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover
           # --json > validate.json || true
           # node ./scripts/parseValidateResult.js
 
