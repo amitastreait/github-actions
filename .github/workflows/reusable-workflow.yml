@@ -76,6 +76,10 @@ jobs:
         id: install-npm
         run: |
           npm install
+      - name: Get the latest API Version
+        id: api-version
+        run: |
+          cat "sfdx-project.json" | jq -r ."sourceApiVersion" > replacementFiles/latest-api-version.txt
       # Install the SFDX CLI using the npm command
       - name: Installing the Salesforce CLI
         id: install-salesforce-cli

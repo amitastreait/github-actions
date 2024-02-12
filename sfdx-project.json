@@ -8,5 +8,28 @@
   "name": "github-actions-template",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "52.0"
+  "sourceApiVersion": "59.0",
+  "replacements": [
+    {
+      "filename": "force-app/main/default/namedCredentials/MyAmazon.namedCredential-meta.xml",
+      "stringToReplace": "{env.AWS_URL}",
+      "replaceWithEnv": "AWS_URL"  
+    },
+    {
+      "filename": "force-app/main/default/namedCredentials/AWS.namedCredential-meta.xml",
+      "stringToReplace": "{env.AWS_LEGACY_URL}",
+      "replaceWithEnv": "AWS_LEGACY_URL"  
+    },
+    {
+      "filename": "/force-app/main/default/classes/MyClass.cls",
+      "stringToReplace": "myNS__",
+      "replaceWithEnv": "SOME_ENV_THAT_CAN_BE_BLANK",
+      "allowUnsetEnvVariable": true
+    },
+    {
+      "glob": "force-app/main/default/classes/*.xml",
+      "regexToReplace": "<apiVersion>\\d+\\</apiVersion>",
+      "replaceWithEnv": "LATEST_API_VERSION"
+    }
+  ]
 }
