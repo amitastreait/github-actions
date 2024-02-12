@@ -77,8 +77,8 @@ jobs:
       - name: Update .env.${{inputs.environment}} file
         id: update-env-production-file
         run: |
-          # echo "AWS_ACCESS_KEY=${{secrets.AWS_ACCESS_KEY}}" >> $GITHUB_ENV
-          echo "AWS_ACCESS_KEY=${{secrets.AWS_ACCESS_KEY}}" >> ".env.${{inputs.environment}}"
+          echo "AWS_ACCESS_KEY=SOME_VALUE_TO_BE_REPLACED" >> $GITHUB_ENV
+          # echo "AWS_ACCESS_KEY= ${{secrets.AWS_ACCESS_KEY}}" >> ".env.${{inputs.environment}}"
           echo "DEV_AWS_ACCESS_KEY=${{secrets.AWS_ACCESS_KEY}}" >> $GITHUB_ENV
           # echo "\nAWS_ACCESS_KEY=${{secrets.AWS_ACCESS_KEY}}" >> ".env.${{inputs.environment}}"
           cat .env.${{inputs.environment}}
