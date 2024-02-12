@@ -59,7 +59,8 @@ jobs:
     
     # use the environment if there are different environments based on the different Salesforce Org.
     environment: ${{inputs.environment}}
-    
+    env:
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
     steps:
     # Notify Slack that the job has started
       - uses: act10ns/slack@v2
@@ -190,6 +191,8 @@ jobs:
       - name: Validate components to Salesforce
         id: validate-pull-request-components
         if: ${{ github.event_name == 'pull_request' }}
+        env:
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
         run: |
           sf project deploy validate --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover
           # --json > validate.json || true
@@ -220,6 +223,8 @@ jobs:
       - name: Validating components to Salesforce
         id: validate
         if: ${{ github.event_name == 'push' }}
+        env:
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
         run: |
           sf project deploy validate --manifest manifest/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover
           # --json  > validate.json || true
@@ -230,6 +235,8 @@ jobs:
       - name: Deploying Delta components to Salesforce
         id: deploy
         if: ${{ github.event_name == 'push' }}
+        env:
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
         run: |
           sf project deploy start --manifest manifest/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover
           # --json  > deploy.json || true
