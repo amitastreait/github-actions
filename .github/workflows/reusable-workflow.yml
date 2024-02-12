@@ -88,6 +88,10 @@ jobs:
         with:
           path: ./
           mode: ${{inputs.environment}}
+      
+      - name: See the content of .env.${{inputs.environment}} file
+        run: |
+          cat .env.${{inputs.environment}}
           
       - name: Installing NPM
         id: install-npm
