@@ -318,5 +318,5 @@ jobs:
             ### Discussion Points
             Connect with peers or your lead to discuss about the issue if needed
             
-          PINNED: true
-          CLOSE_PREVIOUS: false
+          PINNED: false
+          CLOSE_PREVIOUS: true
