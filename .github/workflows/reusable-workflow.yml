@@ -89,10 +89,6 @@ jobs:
           path: ./
           mode: ${{inputs.environment}}
       
-      - name: See the content of .env.${{inputs.environment}} file
-        run: |
-          cat .env.${{inputs.environment}}
-          
       - name: Installing NPM
         id: install-npm
         run: |
@@ -135,6 +131,7 @@ jobs:
           sf sgd source delta --to "HEAD" --from "HEAD~1" --output "./delta" --ignore-whitespace -d -i .sgdignore
           echo "--- package.xml generated with added and modified metadata ---"
           cat delta/package/package.xml
+          ls delta
       
       - name: Installing the SFDX CLI Scanner
         id: install-sfdx-scanner
@@ -202,9 +199,12 @@ jobs:
       # Remove the if condition if you want to generate delta files for push events    
       - name: Deploy Delta components to Salesforce
         id: deploy-pull-request-component
+        env:
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          sf project deploy start --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover  --json
+          # sf project deploy start --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover  --json
+          sf project deploy start -p delta/force-app --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover  --json
           # --json  > deploy.json || true
           # node ./scripts/parseDeployResult.js
 
