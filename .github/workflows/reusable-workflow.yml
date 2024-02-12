@@ -71,6 +71,13 @@ jobs:
         id: checkout-code
         with:
           fetch-depth: 0
+
+      - name: Load .env file
+        uses: xom9ikk/dotenv@v2
+        with:
+          path: ./
+          mode: ${{inputs.environment}}
+          load-mode: skip
           
       - name: Installing NPM
         id: install-npm
