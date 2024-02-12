@@ -87,7 +87,7 @@ jobs:
         uses: xom9ikk/dotenv@v2
         with:
           path: ./
-          mode: .env.${{inputs.environment}}
+          mode: ${{inputs.environment}}
           
       - name: Installing NPM
         id: install-npm
