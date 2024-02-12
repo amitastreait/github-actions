@@ -1,3 +1,4 @@
+name: Reusable Workflow
 # Create a reusable YML file that will be used for all the branches or Salesforce environments
 on:
   workflow_call:
@@ -34,6 +35,8 @@ on:
        required: true
       SONAR_TOKEN:
        required: true
+      AWS_ACCESS_KEY:
+        required: true
 
 # declare the local variables that are accessible within the complete pipeline
 env:
@@ -70,11 +73,30 @@ jobs:
         id: checkout-code
         with:
           fetch-depth: 0
-          
+      
+      - name: Update .env.${{inputs.environment}} file
+        id: update-env-production-file
+        run: |
+          # echo "AWS_ACCESS_KEY=SOME_VALUE_TO_BE_REPLACED" >> $GITHUB_ENV
+          # echo " " >> .env.${{inputs.environment}}
+          # echo "AWS_ACCESS_KEY= ${{secrets.AWS_ACCESS_KEY}}" >> .env.${{inputs.environment}}
+          # echo " " >> .env.${{inputs.environment}}
+          cat .env.${{inputs.environment}}
+
+      - name: Load .env file
+        uses: xom9ikk/dotenv@v2
+        with:
+          path: ./
+          mode: ${{inputs.environment}}
+      
       - name: Installing NPM
         id: install-npm
         run: |
           npm install
+      - name: Get the latest API Version
+        id: api-version
+        run: |
+          cat "sfdx-project.json" | jq -r ."sourceApiVersion" > replacementFiles/latest-api-version.txt
       # Install the SFDX CLI using the npm command
       - name: Installing the Salesforce CLI
         id: install-salesforce-cli
@@ -109,6 +131,7 @@ jobs:
           sf sgd source delta --to "HEAD" --from "HEAD~1" --output "./delta" --ignore-whitespace -d -i .sgdignore
           echo "--- package.xml generated with added and modified metadata ---"
           cat delta/package/package.xml
+          ls delta
       
       - name: Installing the SFDX CLI Scanner
         id: install-sfdx-scanner
@@ -168,7 +191,7 @@ jobs:
         id: validate-pull-request-components
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          sf project deploy validate --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover 
+          sf project deploy validate --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover
           # --json > validate.json || true
           # node ./scripts/parseValidateResult.js
 
@@ -176,9 +199,12 @@ jobs:
       # Remove the if condition if you want to generate delta files for push events    
       - name: Deploy Delta components to Salesforce
         id: deploy-pull-request-component
+        env:
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          sf project deploy start --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover 
+          # sf project deploy start --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover  --json
+          sf project deploy start -p delta/force-app --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover  --json
           # --json  > deploy.json || true
           # node ./scripts/parseDeployResult.js
 
@@ -306,5 +332,5 @@ jobs:
             ### Discussion Points
             Connect with peers or your lead to discuss about the issue if needed
             
-          PINNED: true
-          CLOSE_PREVIOUS: false
+          PINNED: false
+          CLOSE_PREVIOUS: true

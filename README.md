@@ -52,6 +52,7 @@
      - [Run the Code Analysis tool in repo](https://github.com/amitastreait/github-actions/#run-the-code-analysis-tool-in-repo)
      - [Upload the Scan report as Artifacts](https://github.com/amitastreait/github-actions/#upload-the-scan-report-as-artifacts)
  13. [Work with dependent Jobs](https://github.com/amitastreait/github-actions/#work-with-dependent-jobs)
+ 14. [Useful Links for String Replacement](https://github.com/amitastreait/github-actions/#Useful-links-for-String-Replacement-in-SFDX-CLI)
 
 # What is GitHub Actions
 GitHub Actions is a Continuous Integration & Deployment platform provided by Github that can be used to deploy your code from one environment to another environment.
@@ -654,3 +655,13 @@ build:
 Make changes in the codebase, commit and publish the changes to execute the job.
 
 ![image](https://user-images.githubusercontent.com/14299807/202902934-6fe41eca-b0e2-4288-852b-51624dd1c05e.png)
+
+## Useful links for String Replacement in SFDX CLI
+
+[Official Salesforce Document](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_ws_string_replace.htm)
+
+[Read dotenv Files](https://github.com/marketplace/actions/simple-dotenv)
+
+[Create dotenv Files](https://github.com/marketplace/actions/create-dotenv-file)
+
+[Update dotenv Files](https://stackoverflow.com/questions/60176044/how-do-i-use-an-env-file-with-github-actions)
