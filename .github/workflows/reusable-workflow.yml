@@ -35,6 +35,8 @@ on:
        required: true
       SONAR_TOKEN:
        required: true
+      AWS_ACCESS_KEY:
+        required: true
 
 # declare the local variables that are accessible within the complete pipeline
 env:
