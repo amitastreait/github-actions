@@ -207,7 +207,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           # sf project deploy start --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover  --json
-          sf project deploy start -p delta/force-app --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover  --json
+          sf project deploy start -p --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover  --json
           # --json  > deploy.json || true
           # node ./scripts/parseDeployResult.js
 

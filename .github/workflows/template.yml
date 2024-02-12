@@ -49,7 +49,7 @@ jobs:
       environment: production
       # RunLocalTests
       TESTLEVEL: RunSpecifiedTests
-      TESTCLASSES: AccountTriggerTest AccountTriggerHandlerTest
+      TESTCLASSES: AccountTriggerTest AccountTriggerHandlerTest MyClassTest
       CREATE_ISSUE: false
       #TARGET_ORG: ${{matrix.environment}}
     secrets: inherit
