@@ -47,8 +47,9 @@ jobs:
       issues: write
     with:
       environment: production
-      TESTLEVEL: RunLocalTests
-      TESTCLASSES: AccountTriggerTest, AccountTriggerHandlerTest
+      # RunLocalTests
+      TESTLEVEL: RunSpecifiedTests
+      TESTCLASSES: AccountTriggerTest AccountTriggerHandlerTest
       CREATE_ISSUE: false
       #TARGET_ORG: ${{matrix.environment}}
     secrets: inherit
