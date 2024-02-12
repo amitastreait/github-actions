@@ -33,16 +33,6 @@ on:
       
 jobs:
   
-  PrepareEnvVariables:
-    runs-on: ubuntu-latest
-    environment: production
-    name: Prepare Environment Variables
-    steps:
-      - name: Update .env.production file
-        id: update-env-production-file
-        run: |
-          echo "\nAWS_ACCESS_KEY=${{secrets.AWS_ACCESS_KEY}}" >> .env.production
-          cat .env.production
   Deploy:
     name: Deploy
     #strategy:
