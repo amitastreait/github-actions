@@ -84,11 +84,22 @@ jobs:
           # echo " " >> .env.${{inputs.environment}}
           cat .env.${{inputs.environment}}
 
+      - name: Create Dotenv File
+        uses: actually-colab/github-action-create-env-file@v2.3
+        with:
+          envkey_AWS_URL: "https://dev-s3.amazonaws.com"
+          envkey_AWS_LEGACY_URL: "https://dev-s3.us-east-1.amazonaws.com"
+          envkey_LATEST_API_VERSION: "v59.0"
+          envkey_BLANK_NAME_SPACE: ""
+          envkey_AWSACCESSKEY: "DVE_BLANK_VAL_DEV"
+          directory: ./
+          file_name: .env
+      
       - name: Load .env file
         uses: xom9ikk/dotenv@v2
         with:
           path: ./
-          mode: production #${{inputs.environment}}
+          # mode: production #${{inputs.environment}}
       
       - name: Installing NPM
         id: install-npm
