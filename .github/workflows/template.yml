@@ -7,7 +7,7 @@ on:
   push:
     # you may only define one of the `branches` and the `branches-ignore` for a single event
     branches:
-      - developer
+      # - developer
       - feature/**
       - hotfix/**
       - release/**
