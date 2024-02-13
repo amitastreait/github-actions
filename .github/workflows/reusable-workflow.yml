@@ -86,6 +86,8 @@ jobs:
           echo " " >> .env.${{inputs.environment}}
           echo "SITE_ADMIN= ${{secrets.SITE_ADMIN}}" >> .env.${{inputs.environment}}
           echo " " >> .env.${{inputs.environment}}
+          echo "SITE_DOMAIN= ${{secrets.SITE_DOMAIN}}" >> .env.${{inputs.environment}}
+          echo " " >> .env.${{inputs.environment}}
           cat .env.${{inputs.environment}}
 
       #- name: Create Dotenv File

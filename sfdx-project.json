@@ -36,6 +36,11 @@
       "replaceWithEnv": "SITE_ADMIN"
     },
     {
+      "filename": "force-app/main/default/sites/Customer_Support.site-meta.xml",
+      "stringToReplace": "{env.SITE_DOMAIN}",
+      "replaceWithEnv": "SITE_DOMAIN"
+    },
+    {
       "filename": "/force-app/main/default/classes/MyClass.cls",
       "stringToReplace": "myNS__",
       "replaceWithEnv": "BLANK_NAME_SPACE",
