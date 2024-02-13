@@ -79,12 +79,14 @@ jobs:
         id: update-env-production-file
         run: |
           # echo "AWS_ACCESS_KEY=SOME_VALUE_TO_BE_REPLACED" >> $GITHUB_ENV
-          # echo " " >> .env.${{inputs.environment}}
-          # echo "AWS_ACCESS_KEY= ${{secrets.AWS_ACCESS_KEY}}" >> .env.${{inputs.environment}}
-          # echo " " >> .env.${{inputs.environment}}
+          echo " " >> .env.${{inputs.environment}}
+          echo "AWS_ACCESS_KEY= ${{secrets.AWS_ACCESS_KEY}}" >> .env.${{inputs.environment}}
+          echo " " >> .env.${{inputs.environment}}
+          echo "AWS_ACCESS_SECRET= ${{secrets.AWS_ACCESS_SECRET}}" >> .env.${{inputs.environment}}
+          echo " " >> .env.${{inputs.environment}}
           cat .env.${{inputs.environment}}
 
-      #- name: Create Dotenv File ( Will not Work )
+      #- name: Create Dotenv File
       #  uses: actually-colab/github-action-create-env-file@v2.3
       #  with:
       #    envkey_AWS_URL: "https://dev-s3.amazonaws.com"
@@ -132,7 +134,7 @@ jobs:
         run: |
           sf org login jwt --client-id ${{ secrets.HUB_CONSUMER_KEY }} --jwt-key-file  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --set-default --alias HubOrg --instance-url ${{ secrets.HUB_LOGIN_URL }} 
           sf org display
-          
+
       # generate the package.xml file with the metadata file with modifications.
       # Delta deployment will be beneficial to make the deployment faster
       # Remove the if condition if you want to generate delta files for push events
