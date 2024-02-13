@@ -26,6 +26,7 @@
     <siteAdmin>{env.SITE_ADMIN}</siteAdmin>
     <siteGuestRecordDefaultOwner>{env.SITE_ADMIN}</siteGuestRecordDefaultOwner>
     <siteType>ChatterNetwork</siteType>
-    <subdomain>amit-portfolio-developer-edition</subdomain>
+    <subdomain>trailhead-arch-dev-ed.my.site.com</subdomain>
+    <!--  <subdomain>amit-portfolio-developer-edition</subdomain> -->
     <urlPathPrefix>support</urlPathPrefix>
 </CustomSite>
