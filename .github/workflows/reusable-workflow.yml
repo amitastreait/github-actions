@@ -111,6 +111,7 @@ jobs:
         id: api-version
         run: |
           cat "sfdx-project.json" | jq -r ."sourceApiVersion" > replacementFiles/latest-api-version.txt
+          cat replacementFiles/latest-api-version.txt
       # Install the SFDX CLI using the npm command
       - name: Installing the Salesforce CLI
         id: install-salesforce-cli
@@ -133,7 +134,8 @@ jobs:
         id: authenticate-salesforce
         run: |
           sf org login jwt --client-id ${{ secrets.HUB_CONSUMER_KEY }} --jwt-key-file  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --set-default --alias HubOrg --instance-url ${{ secrets.HUB_LOGIN_URL }} 
-          sf org display
+          # never use the below command in actual CI/CD Job
+          # sf org display
 
       # generate the package.xml file with the metadata file with modifications.
       # Delta deployment will be beneficial to make the deployment faster
@@ -147,6 +149,16 @@ jobs:
           echo "--- package.xml generated with added and modified metadata ---"
           cat delta/package/package.xml
           ls delta
+      
+      - name: Generate the package.xml for delta files
+        id: generate-delta-files-push
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          # mkdir delta
+          # sf sgd source delta --to "HEAD" --from "HEAD~1" --output "./delta" --ignore-whitespace -d -i .sgdignore
+          echo "--- package.xml generated with added and modified metadata ---"
+          # cat delta/package/package.xml
+          # ls delta
       
       - name: Installing the SFDX CLI Scanner
         id: install-sfdx-scanner
@@ -205,8 +217,8 @@ jobs:
       - name: Validate components to Salesforce
         id: validate-pull-request-components
         if: ${{ github.event_name == 'pull_request' }}
-        env:
-          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+        #env:
+        #  AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
         run: |
           sf project deploy validate --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --tests ${{ inputs.TESTCLASSES }} --target-org HubOrg --coverage-formatters clover
           # --json > validate.json || true
@@ -216,8 +228,8 @@ jobs:
       # Remove the if condition if you want to generate delta files for push events    
       - name: Deploy Delta components to Salesforce
         id: deploy-pull-request-component
-        env:
-          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+        #env:
+        #  AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           # sf project deploy start --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover  --json
@@ -237,8 +249,8 @@ jobs:
       - name: Validating components to Salesforce
         id: validate
         if: ${{ github.event_name == 'push' }}
-        env:
-          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+        #env:
+        #  AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
         run: |
           sf project deploy validate --manifest manifest/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover
           # --json  > validate.json || true
@@ -249,8 +261,8 @@ jobs:
       - name: Deploying Delta components to Salesforce
         id: deploy
         if: ${{ github.event_name == 'push' }}
-        env:
-          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+        #env:
+        #  AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
         run: |
           sf project deploy start --manifest manifest/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover
           # --json  > deploy.json || true
