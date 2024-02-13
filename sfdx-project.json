@@ -22,8 +22,8 @@
     },
     {
       "filename": "force-app/main/default/namedCredentials/AWS.namedCredential-meta.xml",
-      "stringToReplace": "{env.AWS_ACCESS_KEY}",
-      "replaceWithEnv": "AWS_ACCESS_KEY"
+      "stringToReplace": "{env.AWSACCESSKEY}",
+      "replaceWithEnv": "AWSACCESSKEY"
     },
     {
       "filename": "/force-app/main/default/classes/MyClass.cls",
