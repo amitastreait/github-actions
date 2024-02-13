@@ -23,8 +23,8 @@
     <redirectToCustomDomain>false</redirectToCustomDomain>
     <referrerPolicyOriginWhenCrossOrigin>true</referrerPolicyOriginWhenCrossOrigin>
     <selfRegPage>CommunitiesSelfReg</selfRegPage>
-    <siteAdmin>amitsingh@utils.com.dev</siteAdmin>
-    <siteGuestRecordDefaultOwner>amitsingh@utils.com.dev</siteGuestRecordDefaultOwner>
+    <siteAdmin>{env.SITE_ADMIN}</siteAdmin>
+    <siteGuestRecordDefaultOwner>{env.SITE_ADMIN}</siteGuestRecordDefaultOwner>
     <siteType>ChatterNetwork</siteType>
     <subdomain>amit-portfolio-developer-edition</subdomain>
     <urlPathPrefix>support</urlPathPrefix>
