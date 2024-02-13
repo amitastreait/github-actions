@@ -76,13 +76,15 @@ jobs:
           fetch-depth: 0
       
       - name: Update .env.${{inputs.environment}} file
-        id: update-env-production-file
+        id: update-env-file
         run: |
           # echo "AWS_ACCESS_KEY=SOME_VALUE_TO_BE_REPLACED" >> $GITHUB_ENV
           echo " " >> .env.${{inputs.environment}}
           echo "AWS_ACCESS_KEY= ${{secrets.AWS_ACCESS_KEY}}" >> .env.${{inputs.environment}}
           echo " " >> .env.${{inputs.environment}}
           echo "AWS_ACCESS_SECRET= ${{secrets.AWS_ACCESS_SECRET}}" >> .env.${{inputs.environment}}
+          echo " " >> .env.${{inputs.environment}}
+          echo "SITE_ADMIN= ${{secrets.SITE_ADMIN}}" >> .env.${{inputs.environment}}
           echo " " >> .env.${{inputs.environment}}
           cat .env.${{inputs.environment}}
 
