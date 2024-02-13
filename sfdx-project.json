@@ -26,6 +26,16 @@
       "replaceWithEnv": "AWS_ACCESS_KEY"
     },
     {
+      "filename": "force-app/main/default/namedCredentials/AWS.namedCredential-meta.xml",
+      "stringToReplace": "{env.AWS_ACCESS_SECRET}",
+      "replaceWithEnv": "AWS_ACCESS_SECRET"
+    },
+    {
+      "filename": "force-app/main/default/sites/Customer_Support.site-meta.xml",
+      "stringToReplace": "{env.SITE_ADMIN}",
+      "replaceWithEnv": "SITE_ADMIN"
+    },
+    {
       "filename": "/force-app/main/default/classes/MyClass.cls",
       "stringToReplace": "myNS__",
       "replaceWithEnv": "BLANK_NAME_SPACE",

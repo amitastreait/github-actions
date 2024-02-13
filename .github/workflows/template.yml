@@ -7,7 +7,7 @@ on:
   push:
     # you may only define one of the `branches` and the `branches-ignore` for a single event
     branches:
-      - developer
+      # - developer
       - feature/**
       - hotfix/**
       - release/**
@@ -47,8 +47,9 @@ jobs:
       issues: write
     with:
       environment: production
-      TESTLEVEL: RunLocalTests
-      TESTCLASSES: AccountTriggerTest, AccountTriggerHandlerTest
+      # RunLocalTests
+      TESTLEVEL: RunSpecifiedTests
+      TESTCLASSES: AccountTriggerTest AccountTriggerHandlerTest MyClassTest
       CREATE_ISSUE: false
       #TARGET_ORG: ${{matrix.environment}}
     secrets: inherit

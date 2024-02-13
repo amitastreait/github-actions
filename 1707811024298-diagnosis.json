@@ -1,0 +1,143 @@
+{
+  "versionDetail": {
+    "architecture": "darwin-arm64",
+    "cliVersion": "@salesforce/cli/2.16.7",
+    "nodeVersion": "node-v18.15.0",
+    "osVersion": "Darwin 23.3.0",
+    "rootPath": "/usr/local/lib/node_modules/@salesforce/cli",
+    "shell": "zsh",
+    "pluginVersions": [
+      "@oclif/plugin-autocomplete 3.0.1 (core)",
+      "@oclif/plugin-commands 3.0.5 (core)",
+      "@oclif/plugin-help 6.0.5 (core)",
+      "@oclif/plugin-not-found 3.0.2 (core)",
+      "@oclif/plugin-plugins 4.0.1 (core)",
+      "@oclif/plugin-search 1.0.5 (core)",
+      "@oclif/plugin-update 4.1.3 (core)",
+      "@oclif/plugin-version 2.0.4 (core)",
+      "@oclif/plugin-warn-if-update-available 3.0.2 (core)",
+      "@oclif/plugin-which 3.0.7 (core)",
+      "@salesforce/cli 2.16.7 (core)",
+      "apex 2.3.20 (core)",
+      "auth 2.8.25 (core)",
+      "data 2.6.1 (core)",
+      "deploy-retrieve 1.19.3 (core)",
+      "dev 1.1.9 (user)",
+      "devops-center 1.2.4 (user)",
+      "info 2.6.51 (core)",
+      "limits 2.3.41 (core)",
+      "login 1.2.40 (core)",
+      "marketplace 0.3.2 (core)",
+      "org 2.11.7 (core)",
+      "packaging 1.27.0 (user)",
+      "schema 2.3.32 (core)",
+      "settings 1.4.37 (core)",
+      "sobject 0.2.14 (core)",
+      "source 2.10.46 (core)",
+      "telemetry 2.3.8 (core)",
+      "templates 55.5.17 (core)",
+      "trust 2.6.22 (core)",
+      "user 2.3.41 (core)",
+      "@salesforce/sfdx-scanner 3.15.0 (user)",
+      "dxfolders 0.1.5 (user)",
+      "sfdx-git-delta 5.28.0 (user)"
+    ]
+  },
+  "sfdxEnvVars": [],
+  "sfEnvVars": [
+    [
+      "SF_AUTOUPDATE_DISABLE",
+      "true"
+    ],
+    [
+      "SF_DISABLE_AUTOUPDATE",
+      "true"
+    ],
+    [
+      "SF_UPDATE_INSTRUCTIONS",
+      "Use \"npm update --global @salesforce/cli\" to update npm-based installations."
+    ]
+  ],
+  "cliConfig": {
+    "_base": "@oclif/core@3.0.3",
+    "_commands": {},
+    "_topics": {},
+    "commandPermutations": {
+      "validPermutations": {}
+    },
+    "pluginLoader": {
+      "options": {
+        "root": "/usr/local/lib/node_modules/@salesforce/cli/dist"
+      },
+      "pluginsProvided": false,
+      "errors": [],
+      "plugins": {}
+    },
+    "topicPermutations": {
+      "validPermutations": {}
+    },
+    "arch": "arm64",
+    "bin": "sf",
+    "binAliases": [
+      "sfdx"
+    ],
+    "cacheDir": "/Users/amitsingh/Library/Caches/sf",
+    "channel": "stable",
+    "configDir": "/Users/amitsingh/.config/sf",
+    "dataDir": "/Users/amitsingh/.local/share/sf",
+    "debug": 0,
+    "dirname": "sf",
+    "errlog": "/Users/amitsingh/Library/Caches/sf/error.log",
+    "flexibleTaxonomy": true,
+    "home": "/Users/amitsingh",
+    "name": "@salesforce/cli",
+    "nsisCustomization": "scripts/nsis.nsi",
+    "platform": "darwin",
+    "root": "/usr/local/lib/node_modules/@salesforce/cli",
+    "shell": "zsh",
+    "topicSeparator": " ",
+    "userAgent": "@salesforce/cli/2.16.7 darwin-arm64 node-v18.15.0",
+    "valid": true,
+    "version": "2.16.7",
+    "warned": false,
+    "windows": false,
+    "nodeEngine": ">=16.0.0"
+  },
+  "pluginSpecificData": {
+    "@salesforce/plugin-source": [
+      {
+        "sourceApiVersion": "59.0",
+        "targetOrgApiVersion": "59.0"
+      }
+    ]
+  },
+  "diagnosticResults": [
+    {
+      "testName": "salesforcedx plugin not installed",
+      "status": "pass"
+    },
+    {
+      "testName": "no linked plugins",
+      "status": "pass"
+    },
+    {
+      "testName": "[@salesforce/plugin-source] sourceApiVersion matches apiVersion",
+      "status": "pass"
+    },
+    {
+      "testName": "[@salesforce/plugin-source] sourceApiVersion matches default target org max apiVersion",
+      "status": "pass"
+    },
+    {
+      "testName": "using latest or latest-rc CLI version",
+      "status": "fail"
+    }
+  ],
+  "suggestions": [
+    "Check https://github.com/forcedotcom/cli/issues for CLI issues posted by the community.",
+    "Check http://status.salesforce.com for general Salesforce availability and performance.",
+    "Update your CLI version from: 2.16.7 to the latest version: 2.27.6."
+  ],
+  "logFilePaths": [],
+  "commandExitCode": 0
+}

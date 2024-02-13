@@ -59,7 +59,8 @@ jobs:
     
     # use the environment if there are different environments based on the different Salesforce Org.
     environment: ${{inputs.environment}}
-    
+    #env:
+      #AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
     steps:
     # Notify Slack that the job has started
       - uses: act10ns/slack@v2
@@ -75,14 +76,29 @@ jobs:
           fetch-depth: 0
       
       - name: Update .env.${{inputs.environment}} file
-        id: update-env-production-file
+        id: update-env-file
         run: |
           # echo "AWS_ACCESS_KEY=SOME_VALUE_TO_BE_REPLACED" >> $GITHUB_ENV
-          # echo " " >> .env.${{inputs.environment}}
-          # echo "AWS_ACCESS_KEY= ${{secrets.AWS_ACCESS_KEY}}" >> .env.${{inputs.environment}}
-          # echo " " >> .env.${{inputs.environment}}
+          echo " " >> .env.${{inputs.environment}}
+          echo "AWS_ACCESS_KEY= ${{secrets.AWS_ACCESS_KEY}}" >> .env.${{inputs.environment}}
+          echo " " >> .env.${{inputs.environment}}
+          echo "AWS_ACCESS_SECRET= ${{secrets.AWS_ACCESS_SECRET}}" >> .env.${{inputs.environment}}
+          echo " " >> .env.${{inputs.environment}}
+          echo "SITE_ADMIN= ${{secrets.SITE_ADMIN}}" >> .env.${{inputs.environment}}
+          echo " " >> .env.${{inputs.environment}}
           cat .env.${{inputs.environment}}
 
+      #- name: Create Dotenv File
+      #  uses: actually-colab/github-action-create-env-file@v2.3
+      #  with:
+      #    envkey_AWS_URL: "https://dev-s3.amazonaws.com"
+      #    envkey_AWS_LEGACY_URL: "https://dev-s3.us-east-1.amazonaws.com"
+      #    envkey_LATEST_API_VERSION: "v59.0"
+      #    envkey_BLANK_NAME_SPACE: ""
+      #    envkey_AWSACCESSKEY: "DVE_BLANK_VAL_DEV"
+      #    directory: ./
+      #    file_name: .env
+      
       - name: Load .env file
         uses: xom9ikk/dotenv@v2
         with:
@@ -97,6 +113,7 @@ jobs:
         id: api-version
         run: |
           cat "sfdx-project.json" | jq -r ."sourceApiVersion" > replacementFiles/latest-api-version.txt
+          cat replacementFiles/latest-api-version.txt
       # Install the SFDX CLI using the npm command
       - name: Installing the Salesforce CLI
         id: install-salesforce-cli
@@ -119,7 +136,9 @@ jobs:
         id: authenticate-salesforce
         run: |
           sf org login jwt --client-id ${{ secrets.HUB_CONSUMER_KEY }} --jwt-key-file  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --set-default --alias HubOrg --instance-url ${{ secrets.HUB_LOGIN_URL }} 
-      
+          # never use the below command in actual CI/CD Job
+          # sf org display
+
       # generate the package.xml file with the metadata file with modifications.
       # Delta deployment will be beneficial to make the deployment faster
       # Remove the if condition if you want to generate delta files for push events
@@ -132,6 +151,16 @@ jobs:
           echo "--- package.xml generated with added and modified metadata ---"
           cat delta/package/package.xml
           ls delta
+      
+      - name: Generate the package.xml for delta files
+        id: generate-delta-files-push
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          # mkdir delta
+          # sf sgd source delta --to "HEAD" --from "HEAD~1" --output "./delta" --ignore-whitespace -d -i .sgdignore
+          echo "--- package.xml generated with added and modified metadata ---"
+          # cat delta/package/package.xml
+          # ls delta
       
       - name: Installing the SFDX CLI Scanner
         id: install-sfdx-scanner
@@ -190,8 +219,10 @@ jobs:
       - name: Validate components to Salesforce
         id: validate-pull-request-components
         if: ${{ github.event_name == 'pull_request' }}
+        #env:
+        #  AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
         run: |
-          sf project deploy validate --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover
+          sf project deploy validate --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --tests ${{ inputs.TESTCLASSES }} --target-org HubOrg --coverage-formatters clover
           # --json > validate.json || true
           # node ./scripts/parseValidateResult.js
 
@@ -199,12 +230,12 @@ jobs:
       # Remove the if condition if you want to generate delta files for push events    
       - name: Deploy Delta components to Salesforce
         id: deploy-pull-request-component
-        env:
-          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+        #env:
+        #  AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           # sf project deploy start --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover  --json
-          sf project deploy start -p delta/force-app --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover  --json
+          sf project deploy start --manifest delta/package/package.xml --test-level ${{ inputs.TESTLEVEL }} --tests ${{ inputs.TESTCLASSES }} --target-org HubOrg --coverage-formatters clover  --json
           # --json  > deploy.json || true
           # node ./scripts/parseDeployResult.js
 
@@ -220,6 +251,8 @@ jobs:
       - name: Validating components to Salesforce
         id: validate
         if: ${{ github.event_name == 'push' }}
+        #env:
+        #  AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
         run: |
           sf project deploy validate --manifest manifest/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover
           # --json  > validate.json || true
@@ -230,6 +263,8 @@ jobs:
       - name: Deploying Delta components to Salesforce
         id: deploy
         if: ${{ github.event_name == 'push' }}
+        #env:
+        #  AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
         run: |
           sf project deploy start --manifest manifest/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover
           # --json  > deploy.json || true
