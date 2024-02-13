@@ -131,7 +131,8 @@ jobs:
         id: authenticate-salesforce
         run: |
           sf org login jwt --client-id ${{ secrets.HUB_CONSUMER_KEY }} --jwt-key-file  ${{ secrets.JWT_KEY_FILE }} --username ${{ secrets.HUB_USER_NAME }} --set-default --alias HubOrg --instance-url ${{ secrets.HUB_LOGIN_URL }} 
-      
+          sf org display
+          
       # generate the package.xml file with the metadata file with modifications.
       # Delta deployment will be beneficial to make the deployment faster
       # Remove the if condition if you want to generate delta files for push events
