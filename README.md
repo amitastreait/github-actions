@@ -665,3 +665,9 @@ Make changes in the codebase, commit and publish the changes to execute the job.
 [Create dotenv Files](https://github.com/marketplace/actions/create-dotenv-file)
 
 [Update dotenv Files](https://stackoverflow.com/questions/60176044/how-do-i-use-an-env-file-with-github-actions)
+
+
+https://githubflow.github.io/
+https://nvie.com/posts/a-successful-git-branching-model/
+https://stackoverflow.com/questions/62325286/run-github-actions-when-pull-requests-have-a-specific-label
+https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_review

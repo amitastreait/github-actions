@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Status__c</fullName>
+    <externalId>false</externalId>
+    <label>Status</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>New</fullName>
+                <default>true</default>
+                <label>New</label>
+            </value>
+            <value>
+                <fullName>Assigned</fullName>
+                <default>false</default>
+                <label>Assigned</label>
+            </value>
+            <value>
+                <fullName>In Progress</fullName>
+                <default>false</default>
+                <label>In Progress</label>
+            </value>
+            <value>
+                <fullName>Need more information</fullName>
+                <default>false</default>
+                <label>Need more information</label>
+            </value>
+            <value>
+                <fullName>Fix Deployed</fullName>
+                <default>false</default>
+                <label>Fix Deployed</label>
+            </value>
+            <value>
+                <fullName>Out of Scope</fullName>
+                <default>false</default>
+                <label>Out of Scope</label>
+            </value>
+            <value>
+                <fullName>Not a Bug</fullName>
+                <default>false</default>
+                <label>Not a Bug</label>
+            </value>
+            <value>
+                <fullName>Not Reproducable</fullName>
+                <default>false</default>
+                <label>Not Reproducable</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
