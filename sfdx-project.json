@@ -8,7 +8,7 @@
   "name": "github-actions-template",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "59.0",
+  "sourceApiVersion": "58.0",
   "replacements": [
     {
       "filename": "force-app/main/default/namedCredentials/MyAmazon.namedCredential-meta.xml",
