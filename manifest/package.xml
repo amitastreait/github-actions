@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
 	<types>
+		<members>Customer_Support1</members>
+		<name>ExperienceBundle</name>
+	</types>
+	<!--<types>
 		<members>Techfuge_India_Pvt_Ltd_logo_final</members>
 		<members>Techfuge_India_Pvt_Ltd_logo_final01</members>
 		<name>ContentAsset</name>
@@ -37,6 +41,6 @@
 	<types>
 		<members>Customer_Support1</members>
 		<name>SiteDotCom</name>
-	</types>
+	</types> -->
 	<version>58.0</version>
 </Package>
