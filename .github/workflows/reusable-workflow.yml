@@ -256,7 +256,7 @@ jobs:
         #env:
         #  AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
         run: |
-          sf project deploy validate --manifest manifest/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover
+          sf project deploy validate --manifest manifest/package.xml --test-level ${{ inputs.TESTLEVEL }} --tests ${{ inputs.TESTCLASSES }} --target-org HubOrg --coverage-formatters clover
           # --json  > validate.json || true
           # node ./scripts/parseValidateResult.js
 
@@ -268,7 +268,7 @@ jobs:
         #env:
         #  AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
         run: |
-          sf project deploy start --manifest manifest/package.xml --test-level ${{ inputs.TESTLEVEL }} --target-org HubOrg --coverage-formatters clover
+          sf project deploy start --manifest manifest/package.xml --test-level ${{ inputs.TESTLEVEL }} --tests ${{ inputs.TESTCLASSES }} --target-org HubOrg --coverage-formatters clover
           # --json  > deploy.json || true
           # node ./scripts/parseDeployResult.js
           

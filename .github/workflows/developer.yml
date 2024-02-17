@@ -1,0 +1,25 @@
+name: Validate and Deploy to Developer Org
+
+run-name: ${{ github.actor }} is running pipeline on ${{ github.repository }}
+
+on:
+  release:
+    types: [published]
+      
+jobs:
+  
+  Deploy:
+    name: Deploy
+    uses: "./.github/workflows/reusable-workflow.yml"
+    permissions:
+      security-events: write
+      pull-requests: write
+      actions: read
+      contents: read
+      issues: write
+    with:
+      environment: developer
+      TESTLEVEL: RunSpecifiedTests
+      TESTCLASSES: AccountTriggerTest AccountTriggerHandlerTest MyClassTest
+      CREATE_ISSUE: false
+    secrets: inherit
