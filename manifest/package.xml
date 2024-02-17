@@ -4,6 +4,10 @@
 		<members>Customer_Support1</members>
 		<name>ExperienceBundle</name>
 	</types>
+	<types>
+		<members>SFDC_Default_Navigation_Customer__Support</members>
+		<name>NavigationMenu</name>
+	</types>
 	<!--<types>
 		<members>Techfuge_India_Pvt_Ltd_logo_final</members>
 		<members>Techfuge_India_Pvt_Ltd_logo_final01</members>
