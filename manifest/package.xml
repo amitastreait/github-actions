@@ -1,12 +1,25 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
 	<types>
+		<members>Techfuge_India_Pvt_Ltd_logo_final</members>
+		<members>Techfuge_India_Pvt_Ltd_logo_final01</members>
+		<name>ContentAsset</name>
+	</types>
+	<types>
+		<members>ErrorLog__c</members>
+		<name>CustomObject</name>
+	</types>
+	<types>
 		<members>Customer_Support</members>
 		<name>CustomSite</name>
 	</types>
 	<types>
 		<members>MyAmazon</members>
 		<name>ExternalCredential</name>
+	</types>
+	<types>
+		<members>Error_log_Record_Page</members>
+		<name>FlexiPage</name>
 	</types>
 	<types>
 		<members>AWS</members>
@@ -18,16 +31,12 @@
 		<name>Network</name>
 	</types>
 	<types>
+		<members>cbCustomer_Support</members>
+		<name>NetworkBranding</name>
+	</types>
+	<types>
 		<members>Customer_Support1</members>
 		<name>SiteDotCom</name>
-	</types>
-	<types>
-		<members>ErrorLog__c</members>
-		<name>CustomObject</name>
-	</types>
-	<types>
-		<members>Error_log_Record_Page</members>
-		<name>FlexiPage</name>
 	</types>
 	<version>58.0</version>
 </Package>
