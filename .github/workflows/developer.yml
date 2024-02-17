@@ -2,10 +2,9 @@ name: Validate and Deploy to Developer Org
 
 run-name: ${{ github.actor }} is running pipeline on ${{ github.repository }}
 
-on: 
-  push:
-    tags: 
-      - '**'
+on:
+  release:
+    types: [published]
       
 jobs:
   
