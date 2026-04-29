@@ -1,0 +1,61 @@
+name: Mixed Inputs
+
+on:
+  workflow_dispatch:
+    inputs:
+      name: #name of the variable
+        type: string
+        description: Your name
+        required: true
+        default: "monalisa"
+
+      environment:
+        type: choice
+        description: Target environment
+        options:
+          - dev
+          - UAT
+          - production
+
+      test-level:
+        type: choice
+        description: Test level to run
+        options:
+          - RunSpecifiedTests
+          - RunLocalTests
+          - RunRelevantTests
+          - DefaultTests
+
+      use-emoji:
+        type: boolean
+        description: Include emojis
+        default: false
+
+      message:
+        type: string
+        description: Custom message
+        required: false
+
+      # Runner input
+      runner:
+        type: choice
+        description: Runner to use
+        options:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+        default: ubuntu-latest
+        required: true
+
+jobs:
+  print-inputs:
+    runs-on: ${{ github.event.inputs.runner }}   # 👈 used here
+    steps:
+      - name: Print all inputs
+        run: |
+          echo "Name        : ${{ github.event.inputs.name }}"
+          echo "Environment : ${{ github.event.inputs.environment }}"
+          echo "Test Level  : ${{ github.event.inputs.test-level }}"
+          echo "Use Emoji   : ${{ github.event.inputs.use-emoji }}"
+          echo "Message     : ${{ github.event.inputs.message }}"
+          echo "Runner      : ${{ github.event.inputs.runner }}"
